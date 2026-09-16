@@ -87,7 +87,9 @@ main{padding:0 24px 40px;min-width:0}
 .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 /* thẻ số liệu */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+@media (min-width:1500px){.kpis{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (max-width:720px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand-2);border-radius:10px;padding:16px 18px;box-shadow:0 2px 8px rgba(16,34,58,.04)}
 .kpi small{display:block;font-size:14px;color:var(--ink);font-weight:500;padding-right:44px}
 .kpi b{display:block;font-size:28px;font-variant-numeric:tabular-nums;margin-top:6px;line-height:1.2}
@@ -817,12 +819,19 @@ function xlsDownload(name, tableHtml, title) {
 const tableToXls = (name, sel, title) => { const t = document.querySelector(sel); if (!t) return toast('Không có bảng để xuất', true); const c = t.cloneNode(true); c.querySelectorAll('button,select,input,textarea').forEach(e => e.remove()); c.querySelectorAll('td,th').forEach(e => { e.removeAttribute('style'); if (/^[\d.]+$/.test(e.textContent.trim())) e.className = 'num'; }); if (xlsDownload(name, c.outerHTML, title)) toast('Đã tải tệp ' + name); };
 
 function kpiRow(a) {
+  /* Thẻ theo giai đoạn: số kiểm tra cấp trên → đề nghị → sau thẩm tra → được duyệt → phân bổ → giao */
+  const nam = U.nam, ct = S.capTren[nam], soCT = ct ? sum(Object.values(ct.soKT)) : 0;
+  const dt = S.hoSo.filter(h => h.nam === nam && h.loai === 'DT'), dc = S.hoSo.filter(h => h.nam === nam && h.loai === 'DC');
+  const deNghi = sum(dt, h => hsTot(h, 'deNghi')) + sum(dc.filter(h => !isApproved(h)), h => hsTot(h, 'deNghi'));
+  const daTT = dt.filter(h => h.lines.some(l => l.thamTra !== null)), sauTT = sum(daTT, h => hsTot(h, 'thamTra'));
+  const st = dt[0] ? (stOf(dt[0]).st || stOf(dt[0]).ten) : 'Chưa lập hồ sơ';
   return `<div class="kpis">
-    <div class="kpi navy"><span class="ico">▤</span><small>Dự toán được duyệt</small><b>${fmtTy(a.duyet)}</b><span>tỷ đồng · gồm điều chỉnh</span></div>
-    <div class="kpi"><span class="ico">⊞</span><small>Đã phân bổ</small><b>${fmtTy(a.pb)}</b><span>tỷ đồng</span></div>
-    <div class="kpi ${a.chuaPB ? 'warn' : ''}"><span class="ico">◔</span><small>Chưa phân bổ</small><b>${fmtTy(a.chuaPB)}</b><span>tỷ đồng</span></div>
-    <div class="kpi ok"><span class="ico">✔</span><small>Đã giao</small><b>${fmtTy(a.giao)}</b><span>tỷ đồng · ${a.khoan.length} khoản</span></div>
-    <div class="kpi ${a.pbChuaGiao ? 'red' : ''}"><span class="ico">⚑</span><small>Đã phân bổ, chưa giao</small><b>${fmtTy(a.pbChuaGiao)}</b><span>tỷ đồng</span></div>
+    <div class="kpi"><span class="ico">⇩</span><small>Số kiểm tra cấp trên giao</small><b>${fmtTy(soCT)}</b><span>tỷ đồng${ct ? ' · ' + esc(ct.so) : ' · chưa ghi nhận'}</span></div>
+    <div class="kpi"><span class="ico">▤</span><small>Dự toán đề nghị</small><b>${fmtTy(deNghi)}</b><span>tỷ đồng · ${dt.length + dc.length} hồ sơ · ${esc(st)}</span></div>
+    <div class="kpi ${sauTT && sauTT !== sum(daTT, h => hsTot(h, 'deNghi')) ? 'warn' : ''}"><span class="ico">✎</span><small>Sau thẩm tra</small><b>${fmtTy(sauTT)}</b><span>${daTT.length ? 'tỷ đồng · chênh ' + fmtTy(sauTT - sum(daTT, h => hsTot(h, 'deNghi'))) + ' tỷ so với đề nghị' : 'chưa thẩm tra'}</span></div>
+    <div class="kpi navy"><span class="ico">✔</span><small>Dự toán được duyệt</small><b>${fmtTy(a.duyet)}</b><span>tỷ đồng · gồm điều chỉnh</span></div>
+    <div class="kpi ${a.chuaPB ? 'warn' : ''}"><span class="ico">⊞</span><small>Đã phân bổ</small><b>${fmtTy(a.pb)}</b><span>tỷ đồng${a.chuaPB ? ' · còn ' + fmtTy(a.chuaPB) + ' tỷ chưa phân bổ' : ''}</span></div>
+    <div class="kpi ${a.pbChuaGiao ? 'red' : 'ok'}"><span class="ico">⇒</span><small>Đã giao</small><b>${fmtTy(a.giao)}</b><span>tỷ đồng · ${a.khoan.length} khoản${a.pbChuaGiao ? ' · còn ' + fmtTy(a.pbChuaGiao) + ' tỷ chưa giao' : ''}</span></div>
   </div>`;
 }
 
