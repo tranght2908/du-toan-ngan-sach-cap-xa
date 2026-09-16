@@ -789,6 +789,8 @@ function addLog(role, h, buoc, act, note) { S.log.push({t: new Date().toISOStrin
 
 /* ================= GIAO DIỆN: KHUNG, TỔNG QUAN, HỒ SƠ ================= */
 const ROLE_STEPS = {admin: [1], lap: [2, 3], tiepnhan: [4], thamtra: [5, 6], thamquyen: [7], phanbo: [8, 9], theodoi: [10]};
+const demoAccount = role => BudgetBusinessRules.demoAccounts.find(account => account.role === role);
+const permissionOf = role => BudgetBusinessRules.rolePermissions(role);
 const chip = (t, c) => `<span class="chip ${c || ''}">${esc(t)}</span>`;
 const stChip = h => { const n = stOf(h); return chip(n.st || n.ten, n.c); };
 const kyOf = nam => S.ky.find(k => k.nam === nam);
@@ -815,8 +817,8 @@ function shell() {
         <select id="sel-nam" data-chg="nam">${years().map(y => `<option value="${y}" ${y === U.nam ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
       <div class="umenu">
         <button class="ubtn" data-act="menu" aria-haspopup="true" aria-expanded="${!!U.menu}"><span class="av">${initials(r.nguoi)}</span><span class="un"><b>${esc(r.nguoi)}</b><small>${esc(r.ten)}</small></span><span aria-hidden="true">▾</span></button>
-        ${U.menu ? `<div class="udrop" role="menu"><div class="uh">Đổi tài khoản</div>
-          ${Object.entries(ROLES).map(([k, v]) => `<button role="menuitem" class="uitem ${k === U.role ? 'on' : ''}" data-act="asRole" data-role="${k}"><span class="av sm">${initials(v.nguoi)}</span><span><b>${esc(v.nguoi)}</b><small>${esc(v.ten)}</small></span></button>`).join('')}
+        ${U.menu ? `<div class="udrop" role="menu"><div class="uh">Đổi tài khoản demo</div>
+          ${Object.entries(ROLES).map(([k, v]) => `<button role="menuitem" class="uitem ${k === U.role ? 'on' : ''}" data-act="asRole" data-role="${k}"><span class="av sm">${initials(v.nguoi)}</span><span><b>${esc(v.nguoi)}</b><small>${esc(demoAccount(k)?.username || '')} · ${esc(v.ten)}</small></span></button>`).join('')}
           <div class="usep"></div><button role="menuitem" class="uitem" data-act="reset">Khôi phục dữ liệu mẫu</button></div>` : ''}
       </div>
     </div>
@@ -1436,11 +1438,10 @@ function vDm() {
 }
 
 function vTk() {
-  const acc = {admin: 'qt.khoa', lap: 'tckt.ha', tiepnhan: 'tn.phuc', thamtra: 'bktns.lan', thamquyen: 'hdnd.tung', phanbo: 'thns.ngan', theodoi: 'kt.bao'};
-  const scope = {admin: 'Toàn hệ thống', lap: 'Hồ sơ của đơn vị dự toán', tiepnhan: 'Hồ sơ đã gửi', thamtra: 'Hồ sơ đã tiếp nhận', thamquyen: 'Hồ sơ đã trình', phanbo: 'Dự toán đã phê duyệt', theodoi: 'Dự toán đã giao'};
-  return pageHead('Quản trị', 'Tài khoản & phân quyền', 'Người dùng được phân quyền theo từng khâu của luồng nghiệp vụ.')
-  + `<section class="panel"><div class="tw"><table class="t"><thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Chức danh</th><th>Vai trò</th><th>Bước được thao tác</th><th>Phạm vi dữ liệu</th><th>Trạng thái</th></tr></thead><tbody>
-  ${Object.entries(ROLES).map(([k, r]) => `<tr><td><b>${acc[k]}</b></td><td>${esc(r.nguoi)}</td><td class="small">${esc(r.cv)}</td><td>${esc(r.ten)}</td><td>${ROLE_STEPS[k].join(', ')}</td><td class="small">${scope[k]}</td><td>${chip('Hoạt động', 'ok')}</td></tr>`).join('')}</tbody></table></div></section>`;
+  return pageHead('Quản trị', 'Tài khoản demo & phân quyền', 'Mỗi tài khoản chỉ thao tác ở đúng khâu nghiệp vụ được giao; các màn hình và hành động còn lại ở chế độ xem.')
+  + `<section class="panel" style="margin-bottom:16px"><div class="pb stack"><div class="callout info"><b>Thông tin đăng nhập dùng để demo</b><p class="small">Tất cả tài khoản dùng mật khẩu mô phỏng <b>Demo@2027</b>. Bạn có thể chọn “Đăng nhập demo” tại từng dòng hoặc đổi nhanh từ menu góc trên phải. Thông tin này chỉ phục vụ prototype, không phải cơ chế xác thực thật.</p></div></div></section>
+  <section class="panel"><div class="tw"><table class="t"><thead><tr><th>Tài khoản demo</th><th>Họ tên / chức danh</th><th>Vai trò · bước</th><th>Phạm vi dữ liệu</th><th>Được thao tác</th><th>Giới hạn</th><th></th></tr></thead><tbody>
+  ${Object.entries(ROLES).map(([k, r]) => { const account = demoAccount(k), permission = permissionOf(k); return `<tr><td><b>${esc(account?.username || '')}</b><span class="sub">Mật khẩu: ${esc(account?.password || '')}</span>${chip('Hoạt động', 'ok')}</td><td><b>${esc(r.nguoi)}</b><span class="sub">${esc(r.cv)}</span></td><td>${esc(r.ten)}<span class="sub">${esc(permission.steps)}</span></td><td class="small">${esc(permission.scope)}</td><td class="small"><ul style="margin:0;padding-left:17px">${permission.actions.map(action => `<li>${esc(action)}</li>`).join('')}</ul></td><td class="small">${esc(permission.limits)}</td><td><button class="btn sm" data-act="asRole" data-role="${k}">${k === U.role ? 'Đang dùng' : 'Đăng nhập demo'}</button></td></tr>`; }).join('')}</tbody></table></div></section>`;
 }
 
 function vLog() {
