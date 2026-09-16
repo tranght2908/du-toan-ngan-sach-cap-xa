@@ -414,6 +414,9 @@ const DM = {
   chiTieu: ['Định mức phân bổ chi thường xuyên theo Nghị quyết HĐND tỉnh', 'Dự phòng ngân sách từ 2% – 5% tổng chi cân đối', 'Chi đầu tư phát triển theo kế hoạch đầu tư công trung hạn 2026–2030'],
   checklist: ['Đúng kỳ ngân sách và thời gian tiếp nhận', 'Biểu mẫu đúng mẫu quy định của kỳ', 'Số liệu khớp giữa tờ trình và biểu tổng hợp', 'Tài liệu đính kèm đọc được, có chữ ký/đóng dấu'],
 };
+const DM_KEYS = ['nguon', 'loaiKP', 'linhVuc', 'nhiemVu', 'donVi', 'bieuMau'];
+const DM0 = clone(DM);
+function bindDm(fresh) { S.dm = S.dm || {}; DM_KEYS.forEach(k => { if (fresh || !S.dm[k]) S.dm[k] = clone(DM0[k]); DM[k] = S.dm[k]; }); }
 const nm = (list, ma) => (DM[list].find(x => x.ma === ma) || {}).ten || ma || '—';
 const nvOf = ma => DM.nhiemVu.find(x => x.ma === ma) || {};
 
@@ -719,11 +722,12 @@ let S, U;
 function load() {
   try { const raw = localStorage.getItem(LS_KEY); if (raw) { const o = JSON.parse(raw); if (o && o.S && o.S.v === 4) { S = o.S; U = o.U; } } } catch (e) {}
   if (!S) { S = seed(); U = null; }
+  bindDm(false);
   U = Object.assign({role: 'admin', view: 'home', p: {}, nam: 2026, demo: true, sc: 0, tab: 'ct', seen: [], f: {}}, U || {});
   U.modal = null; U.menu = false;
 }
 function save() { try { localStorage.setItem(LS_KEY, JSON.stringify({S, U})); } catch (e) {} }
-function resetAll() { S = seed(); U = {role: 'admin', view: 'home', p: {}, nam: 2026, demo: U ? U.demo : true, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
+function resetAll() { S = seed(); bindDm(true); U = {role: 'admin', view: 'home', p: {}, nam: 2026, demo: U ? U.demo : true, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
 function addLog(role, h, buoc, act, note) { S.log.push({t: new Date().toISOString(), role, hs: h ? h.id : null, buoc, act, note: note || ''}); }
 
 /* ================= GIAO DIỆN: KHUNG, TỔNG QUAN, HỒ SƠ ================= */
@@ -790,7 +794,17 @@ const pageHead = (crumb, title, desc, right) => `<div class="pt"><button class="
 /* thanh công cụ, bộ lọc và phân trang cho màn hình danh sách */
 const toolbar = (btns, filters) => `<div class="tb">${btns || ''}${btns && filters ? '<span class="sep"></span>' : ''}${filters || ''}</div>`;
 const fsel = (bind, list, v, blank) => `<select class="fsel" data-bind="${bind}">${opt(list, v, blank)}</select>`;
-const pager = n => `<div class="pager"><span class="pg"><button aria-label="Trang đầu">«</button><button aria-label="Trang trước">‹</button></span><span>${n ? `1-${Math.min(n, 50)} trên tổng ${n}` : '0 dòng'}</span><span class="pg"><button aria-label="Trang sau">›</button><button aria-label="Trang cuối">»</button></span><span>Số dòng mỗi trang: <select><option>50</option><option>100</option></select></span></div>`;
+const pgOf = key => { U.pg = U.pg || {}; return U.pg[key] || (U.pg[key] = {p: 0, size: 20}); };
+const pageOf = (list, key) => { const g = pgOf(key); const max = Math.max(0, Math.ceil(list.length / g.size) - 1); if (g.p > max) g.p = max; return list.slice(g.p * g.size, (g.p + 1) * g.size); };
+const pager = (n, key) => { const g = pgOf(key), from = n ? g.p * g.size + 1 : 0, to = Math.min(n, (g.p + 1) * g.size), last = Math.max(0, Math.ceil(n / g.size) - 1);
+  const b = (op, t, dis) => `<button data-act="pg" data-key="${key}" data-op="${op}" ${dis ? 'disabled' : ''} aria-label="${t}" title="${t}">${{first: '«', prev: '‹', next: '›', last: '»'}[op]}</button>`;
+  return `<div class="pager"><span class="pg">${b('first', 'Trang đầu', g.p === 0)}${b('prev', 'Trang trước', g.p === 0)}</span><span>${n ? `${from}-${to} trên tổng ${n}` : '0 dòng'}</span><span class="pg">${b('next', 'Trang sau', g.p >= last)}${b('last', 'Trang cuối', g.p >= last)}</span><span>Số dòng mỗi trang: <select data-pgsize="${key}">${[10, 20, 50, 100].map(x => `<option ${x === g.size ? 'selected' : ''}>${x}</option>`).join('')}</select></span></div>`; };
+/* Xuất Excel: tệp .xls dạng bảng HTML (Excel mở trực tiếp, giữ tiếng Việt và định dạng) */
+function xlsDownload(name, tableHtml, title) {
+  const html = `<html><head><meta charset="utf-8"><style>td,th{border:1px solid #888;padding:3px 6px;font-family:'Times New Roman';font-size:12pt;vertical-align:top}th{background:#eee;font-weight:bold}.num{text-align:right;mso-number-format:"\\#\\,\\#\\#0"}</style></head><body>${title ? '<p><b>' + title + '</b></p>' : ''}${tableHtml}</body></html>`;
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + html], {type: 'application/vnd.ms-excel;charset=utf-8'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); return true; } catch (e) { toast('Trình duyệt chặn tải tệp', true); return false; }
+}
+const tableToXls = (name, sel, title) => { const t = document.querySelector(sel); if (!t) return toast('Không có bảng để xuất', true); const c = t.cloneNode(true); c.querySelectorAll('button,select,input,textarea').forEach(e => e.remove()); c.querySelectorAll('td,th').forEach(e => { e.removeAttribute('style'); if (/^[\d.]+$/.test(e.textContent.trim())) e.className = 'num'; }); if (xlsDownload(name, c.outerHTML, title)) toast('Đã tải tệp ' + name); };
 
 function kpiRow(a) {
   return `<div class="kpis">
@@ -837,8 +851,8 @@ function vList() {
   const note = U.role === 'lap' && !canDT && !hasDT ? `<div class="callout info" style="margin-bottom:12px"><b>Kỳ lập dự toán năm ${U.nam}: ${esc(ky ? ky.st : 'chưa khởi tạo')}</b><p>Quản trị hệ thống cần mở kỳ trước khi đơn vị lập hồ sơ.</p></div>` : '';
   return pageHead('', 'Hồ sơ dự toán', '', '')
     + note + `<section class="panel">${toolbar(right, fsel('f:hf_lo', [{ma: 'DT', ten: 'Dự toán năm'}, {ma: 'DC', ten: 'Điều chỉnh/bổ sung'}], flo, 'Loại hồ sơ') + fsel('f:hf_st', stList, fst, 'Trạng thái'))}<div class="tw"><table class="t"><thead><tr><th>Mã hồ sơ</th><th>Tên hồ sơ</th><th>Loại</th><th>Trạng thái</th><th>Đang xử lý</th><th class="num">Đề nghị (đ)</th><th class="num">Được duyệt (đ)</th></tr></thead><tbody>
-    ${list.map(h => `<tr class="click" ${go('hs', {id: h.id})}><td><b>${esc(h.ma)}</b><span class="sub">Phiên bản ${h.phienBan}</span></td><td>${esc(h.ten)}</td><td>${h.loai === 'DT' ? '<span class="tag">Dự toán năm</span>' : '<span class="tag tc">Điều chỉnh/bổ sung</span>'}</td><td>${stChip(h)}</td><td>${esc(stOf(h).ten)}<span class="sub">${esc(ROLES[stOf(h).role]?.ten || '')}</span></td><td class="num">${fmtS(hsTot(h, 'deNghi')).replace(/^\+/, '')}</td><td class="num">${isApproved(h) ? fmt(hsTot(h, 'duyet')) : '—'}</td></tr>`).join('') || `<tr><td colspan="7" class="empty">Chưa có hồ sơ năm ${U.nam}.</td></tr>`}
-    </tbody></table></div>${pager(list.length)}</section>`;
+    ${pageOf(list, 'hoso').map(h => `<tr class="click" ${go('hs', {id: h.id})}><td><b>${esc(h.ma)}</b><span class="sub">Phiên bản ${h.phienBan}</span></td><td>${esc(h.ten)}</td><td>${h.loai === 'DT' ? '<span class="tag">Dự toán năm</span>' : '<span class="tag tc">Điều chỉnh/bổ sung</span>'}</td><td>${stChip(h)}</td><td>${esc(stOf(h).ten)}<span class="sub">${esc(ROLES[stOf(h).role]?.ten || '')}</span></td><td class="num">${fmtS(hsTot(h, 'deNghi')).replace(/^\+/, '')}</td><td class="num">${isApproved(h) ? fmt(hsTot(h, 'duyet')) : '—'}</td></tr>`).join('') || `<tr><td colspan="7" class="empty">Chưa có hồ sơ năm ${U.nam}.</td></tr>`}
+    </tbody></table></div>${pager(list.length, 'hoso')}</section>`;
 }
 
 /* ---------- chi tiết hồ sơ ---------- */
@@ -1280,10 +1294,10 @@ function vKhoan() {
   const list = all.filter(k => (!fng || k.nguon === fng) && (!flo || k.loai === flo) && (!fdv || k.dv === fdv) && (!fst || khoanSt(S, k) === fst));
   const stList = Object.keys(KST).map(x => ({ma: x, ten: x}));
   return pageHead(`<a href="#" ${go('theodoi')}>Sau giao</a> / Khoản đã giao`, 'Khoản dự toán đã giao', '')
-  + `<section class="panel">${toolbar('<button class="btn" data-act="noop">Xuất Excel</button>', fsel('f:kf_ng', DM.nguon, fng, 'Nguồn') + fsel('f:kf_lo', DM.loaiKP, flo, 'Loại kinh phí') + fsel('f:kf_dv', DM.donVi, fdv, 'Đơn vị nhận') + fsel('f:kf_st', stList, fst, 'Trạng thái'))}
-    <div class="tw"><table class="t"><thead><tr><th>Đơn vị nhận / Chủ đầu tư</th><th>Nhiệm vụ</th><th>Nguồn</th><th>Loại KP</th><th>Văn bản giao gần nhất</th><th class="num">Số đã giao (đ)</th><th>Trạng thái</th></tr></thead><tbody>
-    ${list.map(k => { const vb = S.vbGiao.find(v => v.id === last(k.vb)); const st = khoanSt(S, k); return `<tr class="click" data-act="khoan" data-id="${k.id}"><td>${esc(nm('donVi', k.dv))}${DM.donVi.find(d => d.ma === k.dv)?.cdt ? ' <span class="tag tc">CĐT</span>' : ''}</td><td>${esc(nm('nhiemVu', k.nv))}<span class="sub">${esc(nm('linhVuc', k.lv))}</span></td><td>${esc(nm('nguon', k.nguon))}</td><td><span class="tag ${k.loai === 'TC' ? 'tc' : ''}">${esc(nm('loaiKP', k.loai))}</span></td><td>${vb ? `${esc(vb.so)}<span class="sub">${dt(vb.ngayGiao)}</span>` : ''}</td><td class="num"><b>${fmt(k.so)}</b>${k.lichSu.length ? `<span class="sub">${k.lichSu.length} lần điều chỉnh</span>` : ''}</td><td>${chip(st, KST[st])}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Không có khoản phù hợp bộ lọc.</td></tr>'}
-    </tbody><tfoot><tr><td colspan="5">${list.length} / ${all.length} khoản</td><td class="num">${fmt(sum(list, k => k.so))}</td><td></td></tr></tfoot></table></div>${pager(list.length)}</section>`;
+  + `<section class="panel">${toolbar('<button class="btn" data-act="khoanXls">Xuất Excel</button>', fsel('f:kf_ng', DM.nguon, fng, 'Nguồn') + fsel('f:kf_lo', DM.loaiKP, flo, 'Loại kinh phí') + fsel('f:kf_dv', DM.donVi, fdv, 'Đơn vị nhận') + fsel('f:kf_st', stList, fst, 'Trạng thái'))}
+    <div class="tw"><table class="t" id="t-khoan"><thead><tr><th>Đơn vị nhận / Chủ đầu tư</th><th>Nhiệm vụ</th><th>Nguồn</th><th>Loại KP</th><th>Văn bản giao gần nhất</th><th class="num">Số đã giao (đ)</th><th>Trạng thái</th></tr></thead><tbody>
+    ${pageOf(list, 'khoan').map(k => { const vb = S.vbGiao.find(v => v.id === last(k.vb)); const st = khoanSt(S, k); return `<tr class="click" data-act="khoan" data-id="${k.id}"><td>${esc(nm('donVi', k.dv))}${DM.donVi.find(d => d.ma === k.dv)?.cdt ? ' <span class="tag tc">CĐT</span>' : ''}</td><td>${esc(nm('nhiemVu', k.nv))}<span class="sub">${esc(nm('linhVuc', k.lv))}</span></td><td>${esc(nm('nguon', k.nguon))}</td><td><span class="tag ${k.loai === 'TC' ? 'tc' : ''}">${esc(nm('loaiKP', k.loai))}</span></td><td>${vb ? `${esc(vb.so)}<span class="sub">${dt(vb.ngayGiao)}</span>` : ''}</td><td class="num"><b>${fmt(k.so)}</b>${k.lichSu.length ? `<span class="sub">${k.lichSu.length} lần điều chỉnh</span>` : ''}</td><td>${chip(st, KST[st])}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">Không có khoản phù hợp bộ lọc.</td></tr>'}
+    </tbody><tfoot><tr><td colspan="5">${list.length} / ${all.length} khoản</td><td class="num">${fmt(sum(list, k => k.so))}</td><td></td></tr></tfoot></table></div>${pager(list.length, 'khoan')}</section>`;
 }
 
 function khoanModal(k) {
@@ -1366,13 +1380,26 @@ function vKy() {
   </div></section>`;
 }
 
+const DM_T = {nguon: 'Nguồn', loaiKP: 'Loại kinh phí', linhVuc: 'Lĩnh vực', nhiemVu: 'Nhiệm vụ chi', donVi: 'Đơn vị nhận dự toán', bieuMau: 'Biểu mẫu'};
+/* Mục danh mục đang được dùng ở đâu (chặn xóa) */
+function dmUsage(t, ma) {
+  const lines = S.hoSo.flatMap(h => h.lines), n = [];
+  if (t === 'nhiemVu') { const a = lines.filter(l => l.nv === ma).length, b = S.khoan.filter(k => k.nv === ma).length; if (a) n.push(a + ' dòng dự toán'); if (b) n.push(b + ' khoản đã giao'); }
+  if (t === 'nguon') { const a = lines.filter(l => l.nguon === ma).length, b = S.khoan.filter(k => k.nguon === ma).length; if (a) n.push(a + ' dòng dự toán'); if (b) n.push(b + ' khoản đã giao'); }
+  if (t === 'loaiKP') { const a = lines.filter(l => l.loai === ma).length; if (a) n.push(a + ' dòng dự toán'); }
+  if (t === 'linhVuc') { const a = DM.nhiemVu.filter(x => x.lv === ma).length; if (a) n.push(a + ' nhiệm vụ chi'); }
+  if (t === 'donVi') { const a = DM.nhiemVu.filter(x => x.dv === ma).length, b = S.khoan.filter(k => k.dv === ma).length; if (a) n.push(a + ' nhiệm vụ chi'); if (b) n.push(b + ' khoản đã giao'); }
+  if (t === 'bieuMau') { const a = S.hoSo.filter(h => h.taiLieu.some(x => x.bm === ma)).length; if (a) n.push(a + ' hồ sơ có tài liệu'); }
+  return n;
+}
 function vDm() {
-  const t = U.p.dm || 'nhiemVu';
-  const T = {nguon: 'Nguồn', loaiKP: 'Loại kinh phí', linhVuc: 'Lĩnh vực', nhiemVu: 'Nhiệm vụ chi', donVi: 'Đơn vị nhận dự toán', bieuMau: 'Biểu mẫu'};
-  const rows = DM[t].map(x => `<tr><td><b>${esc(x.ma)}</b></td><td>${esc(x.ten)}</td><td>${t === 'nhiemVu' ? esc(nm('linhVuc', x.lv)) + '<span class="sub">Đơn vị mặc định: ' + esc(nm('donVi', x.dv)) + '</span>' : t === 'donVi' ? (x.cdt ? '<span class="tag tc">Chủ đầu tư dự án đầu tư</span>' : 'Đơn vị được giao dự toán') : t === 'bieuMau' ? (x.bb ? 'Bắt buộc' : 'Không bắt buộc') : ''}</td></tr>`).join('');
+  const t = U.p.dm || 'nhiemVu', selMa = U.p.dmSel, selItem = DM[t].find(x => x.ma === selMa);
+  const attr = x => t === 'nhiemVu' ? esc(nm('linhVuc', x.lv)) + '<span class="sub">Đơn vị mặc định: ' + esc(nm('donVi', x.dv)) + '</span>' : t === 'donVi' ? (x.cdt ? '<span class="tag tc">Chủ đầu tư dự án đầu tư</span>' : 'Đơn vị được giao dự toán') : t === 'bieuMau' ? (x.bb ? 'Bắt buộc' : 'Không bắt buộc') : '';
+  const rows = pageOf(DM[t], 'dm').map(x => `<tr class="click ${x.ma === selMa ? 'selrow' : ''}" data-act="dmSel" data-ma="${esc(x.ma)}"><td><b>${esc(x.ma)}</b></td><td>${esc(x.ten)}</td><td>${attr(x)}</td></tr>`).join('');
   return pageHead('Quản trị', 'Danh mục dùng chung', '')
-  + `<section class="panel"><div class="tabs">${Object.entries(T).map(([k, v]) => `<button class="${k === t ? 'on' : ''}" data-act="dmTab" data-tab="${k}">${v} (${DM[k].length})</button>`).join('')}</div>
-  ${toolbar('<button class="btn pri" data-act="noop">Tạo mới</button><button class="btn" data-act="noop">Sửa</button><button class="btn" data-act="noop">Xóa</button>')}<div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Tên</th><th>Thuộc tính</th></tr></thead><tbody>${rows}</tbody></table></div>${pager(DM[t].length)}</section>`;
+  + `<section class="panel"><div class="tabs">${Object.entries(DM_T).map(([k, v]) => `<button class="${k === t ? 'on' : ''}" data-act="dmTab" data-tab="${k}">${v} (${DM[k].length})</button>`).join('')}</div>
+  ${toolbar(`<button class="btn pri" data-act="dmNew">Tạo mới</button><button class="btn" data-act="dmEdit" ${selItem ? '' : 'disabled'}>Sửa</button><button class="btn danger" data-act="dmDelAsk" ${selItem ? '' : 'disabled'}>Xóa</button>${selItem ? `<span class="small muted">Đang chọn: <b>${esc(selItem.ma)}</b> – ${esc(selItem.ten)}</span>` : '<span class="small muted">Chọn một dòng để sửa hoặc xóa</span>'}`)}
+  <div class="tw"><table class="t"><thead><tr><th>Mã</th><th>Tên</th><th>Thuộc tính</th></tr></thead><tbody>${rows}</tbody></table></div>${pager(DM[t].length, 'dm')}</section>`;
 }
 
 function vTk() {
@@ -1385,8 +1412,8 @@ function vLog() {
   const fr = F('lf_r', '');
   const L = S.log.slice().reverse().filter(l => !fr || l.role === fr);
   return pageHead('Quản trị', 'Nhật ký hệ thống', '')
-  + `<section class="panel">${toolbar('<button class="btn" data-act="noop">Làm mới</button>', fsel('f:lf_r', Object.entries(ROLES).map(([k, v]) => ({ma: k, ten: v.ten})), fr, 'Vai trò'))}<div class="tw"><table class="t"><thead><tr><th>Thời gian</th><th>Vai trò thực hiện</th><th>Thao tác</th><th>Hồ sơ</th><th>Ghi chú</th></tr></thead><tbody>
-  ${L.map(l => { const h = S.hoSo.find(x => x.id === l.hs); return `<tr><td class="small tnum">${dtt(l.t)}</td><td>${esc(ROLES[l.role].ten)}</td><td>${esc(l.act)}</td><td>${h ? esc(h.ma) : '—'}</td><td class="small">${esc(l.note)}</td></tr>`; }).join('')}</tbody></table></div>${pager(L.length)}</section>`;
+  + `<section class="panel">${toolbar('<button class="btn" data-act="logReload">Làm mới</button><button class="btn" data-act="logXls">Xuất Excel</button>', fsel('f:lf_r', Object.entries(ROLES).map(([k, v]) => ({ma: k, ten: v.ten})), fr, 'Vai trò'))}<div class="tw"><table class="t" id="t-log"><thead><tr><th>Thời gian</th><th>Vai trò thực hiện</th><th>Thao tác</th><th>Hồ sơ</th><th>Ghi chú</th></tr></thead><tbody>
+  ${pageOf(L, 'log').map(l => { const h = S.hoSo.find(x => x.id === l.hs); return `<tr><td class="small tnum">${dtt(l.t)}</td><td>${esc(ROLES[l.role].ten)}</td><td>${esc(l.act)}</td><td>${h ? esc(h.ma) : '—'}</td><td class="small">${esc(l.note)}</td></tr>`; }).join('')}</tbody></table></div>${pager(L.length, 'log')}</section>`;
 }
 
 /* ---------- Số giao, số kiểm tra từ cấp trên – Đơn vị lập dự toán ghi nhận, làm căn cứ nguồn dự kiến (Bước 2) ---------- */
@@ -1492,11 +1519,10 @@ const ACT = {
   menu() { U.menu = !U.menu; },
   tab(d) { U.tab = d.tab; U.p.cmp = undefined; },
   cmp(d) { U.p.cmp = +d.i; },
-  dmTab(d) { U.p.dm = d.tab; },
+  dmTab(d) { U.p.dm = d.tab; U.p.dmSel = null; },
   asRole(d) { U.role = d.role; U.f = {}; U.menu = false; toast('Đã đổi sang vai trò ' + ROLES[d.role].ten); },
   sbToggle() { if (U.sbo) U.sbo = false; else U.sbc = !U.sbc; },
   sbOpen() { U.sbo = !U.sbo; },
-  noop() {},
   reset() { U.menu = false; U.modal = {type: 'confirm'}; },
   doReset() { resetAll(); toast('Đã đặt lại dữ liệu'); },
   closeModal(d, el, e) { if (d.self && e && e.target !== el) return false; U.modal = null; },
@@ -1518,8 +1544,38 @@ const ACT = {
     toast(`Đã áp dụng số giao ${ct.so} vào nguồn dự kiến (${CT_NGUON.length} nguồn)`);
   },
   bmTab(d) { U.p.bm = d.tab; },
+  /* Danh mục dùng chung – chỉ Quản trị hệ thống */
+  dmSel(d) { U.p.dmSel = d.ma; },
+  dmNew() { if (!need(U.role === 'admin', 'Chỉ Quản trị hệ thống được sửa danh mục.')) return; U.f = {}; U.modal = {type: 'dm', t: U.p.dm || 'nhiemVu', ma: null}; },
+  dmEdit() { if (!need(U.role === 'admin', 'Chỉ Quản trị hệ thống được sửa danh mục.')) return; if (!need(U.p.dmSel, 'Chọn một dòng để sửa.')) return; U.f = {}; U.modal = {type: 'dm', t: U.p.dm || 'nhiemVu', ma: U.p.dmSel}; },
+  dmDelAsk() { if (!need(U.role === 'admin', 'Chỉ Quản trị hệ thống được sửa danh mục.')) return; if (!need(U.p.dmSel, 'Chọn một dòng để xóa.')) return; U.modal = {type: 'dmDel', t: U.p.dm || 'nhiemVu', ma: U.p.dmSel}; },
+  dmSave() {
+    const m = U.modal, t = m.t, list = DM[t], it = m.ma ? list.find(x => x.ma === m.ma) : null;
+    const ma = (F('dm_ma', it ? it.ma : '') || '').trim().toUpperCase(), ten = (F('dm_ten', it ? it.ten : '') || '').trim();
+    if (!need(ma, 'Nhập mã.') || !need(ten, 'Nhập tên.')) return;
+    if (!it && !need(!list.some(x => x.ma === ma), `Mã ${ma} đã tồn tại.`)) return;
+    const o = it || {ma};
+    o.ten = ten;
+    if (t === 'nhiemVu') { o.lv = F('dm_lv', o.lv || ''); o.dv = F('dm_dv', o.dv || ''); if (!need(o.lv && o.dv, 'Chọn lĩnh vực và đơn vị mặc định.')) return; }
+    if (t === 'donVi') o.cdt = !!F('dm_cdt', o.cdt || false);
+    if (t === 'bieuMau') o.bb = !!F('dm_bb', o.bb || false);
+    if (!it) list.push(o);
+    addLog('admin', null, 1, `${it ? 'Sửa' : 'Thêm'} ${DM_T[t].toLowerCase()} ${ma}`, ten);
+    U.modal = null; U.f = {}; U.p.dmSel = ma; toast(`Đã ${it ? 'cập nhật' : 'thêm'} ${ma} – ${ten}`);
+  },
+  dmDel() {
+    const m = U.modal, list = DM[m.t], i = list.findIndex(x => x.ma === m.ma);
+    if (!need(!dmUsage(m.t, m.ma).length, 'Mục đang được sử dụng, không thể xóa.')) return;
+    if (i >= 0) { const [x] = list.splice(i, 1); addLog('admin', null, 1, `Xóa ${DM_T[m.t].toLowerCase()} ${x.ma}`, x.ten); toast(`Đã xóa ${x.ma} – ${x.ten}`); }
+    U.modal = null; U.p.dmSel = null;
+  },
+
   bieuIn() { try { window.print(); } catch (e) { toast('Trình duyệt chặn lệnh in', true); } },
-  bieuXls() { toast(`Đã xuất ${U.p.bm === 'b2' ? 'Biểu 02' : 'Biểu 01'} năm ${U.nam} ra tệp Excel`); },
+  bieuXls() { const d = document.querySelector('.doc'); if (!d) return toast('Chưa có biểu để xuất', true); const c = d.cloneNode(true); c.querySelectorAll('.signs,.dl').forEach(e => e.remove()); const name = `${U.p.bm === 'b2' ? 'Bieu02-Phan-bo-giao' : 'Bieu01-Du-toan-duoc-duyet'}-${U.nam}.xls`; if (xlsDownload(name, c.innerHTML)) toast('Đã tải tệp ' + name); },
+  khoanXls() { tableToXls(`Khoan-du-toan-da-giao-${U.nam}.xls`, '#t-khoan', `Khoản dự toán đã giao năm ${U.nam}`); },
+  logXls() { tableToXls('Nhat-ky-he-thong.xls', '#t-log', 'Nhật ký hệ thống'); },
+  logReload() { toast('Đã tải lại nhật ký'); },
+  pg(d) { const g = pgOf(d.key), n = ({hoso: () => S.hoSo.filter(h => h.nam === U.nam).length, log: () => S.log.length, khoan: () => S.khoan.filter(k => k.nam === U.nam).length, dm: () => DM[U.p.dm || 'nhiemVu'].length})[d.key]?.() ?? 0; const last = Math.max(0, Math.ceil(n / g.size) - 1); g.p = d.op === 'first' ? 0 : d.op === 'prev' ? Math.max(0, g.p - 1) : d.op === 'next' ? Math.min(last, g.p + 1) : last; },
   kyOpen(d) { const k = kyOf(+d.nam); k.st = 'Đang mở tiếp nhận'; k.moAt = now(); addLog('admin', null, 1, 'Mở kỳ lập dự toán năm ' + k.nam, `Tiếp nhận từ ${dt(k.tu)} đến ${dt(k.den)}`); toast(`Đã mở kỳ lập dự toán năm ${k.nam}. Đơn vị lập dự toán có thể lập hồ sơ.`); },
   kyClose(d) {
     const k = kyOf(+d.nam), state = kyCloseState(k.nam);
@@ -1705,6 +1761,24 @@ function modalView() {
       <p class="small muted" style="margin:0">Mô phỏng ký số bằng USB token/SIM ký số. Sau khi ký, văn bản ghi nhận vai trò ký, thời gian ký và số serial chứng thư.</p></div>
       <footer><button class="btn" data-act="closeModal">Hủy</button><button class="btn pri" data-act="kyDo">Ký số và tiếp tục</button></footer></div></div>`;
   }
+  if (U.modal.type === 'dm') {
+    const m = U.modal, t = m.t, it = m.ma ? DM[t].find(x => x.ma === m.ma) : null, v = (k, d) => F('dm_' + k, it ? (it[k] ?? d) : d);
+    const extra = t === 'nhiemVu' ? `<div class="fld"><label for="dm-lv">Lĩnh vực <i>*</i></label>${sel('dm-lv', 'f:dm_lv', DM.linhVuc, v('lv', ''))}</div><div class="fld"><label for="dm-dv">Đơn vị mặc định <i>*</i></label>${sel('dm-dv', 'f:dm_dv', DM.donVi, v('dv', ''))}</div>`
+      : t === 'donVi' ? `<label class="chk"><input type="checkbox" data-bind="f:dm_cdt" ${v('cdt', false) ? 'checked' : ''}> Là chủ đầu tư dự án đầu tư</label>`
+      : t === 'bieuMau' ? `<label class="chk"><input type="checkbox" data-bind="f:dm_bb" ${v('bb', false) ? 'checked' : ''}> Thành phần bắt buộc của hồ sơ</label>` : '';
+    return `<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mdm-t"><header><h3 id="mdm-t">${it ? 'Sửa' : 'Tạo mới'} – ${DM_T[t]}</h3><button class="btn sm ghost" data-act="closeModal">Đóng</button></header><div class="mb">
+      <div class="fld"><label for="dm-ma">Mã <i>*</i></label>${txt('dm-ma', 'f:dm_ma', v('ma', ''), !!it, 'VD: NV41')}</div>
+      <div class="fld"><label for="dm-ten">Tên <i>*</i></label>${txt('dm-ten', 'f:dm_ten', v('ten', ''), false)}</div>
+      ${extra}</div>
+      <footer><button class="btn" data-act="closeModal">Hủy</button><button class="btn pri" data-act="dmSave">Lưu</button></footer></div></div>`;
+  }
+  if (U.modal.type === 'dmDel') {
+    const m = U.modal, it = DM[m.t].find(x => x.ma === m.ma), used = dmUsage(m.t, m.ma);
+    return `<div class="ov"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mdd-t"><header><h3 id="mdd-t">Xóa ${DM_T[m.t].toLowerCase()}</h3></header><div class="mb">
+      <p style="margin:0"><b>${esc(it?.ma)}</b> – ${esc(it?.ten)}</p>
+      ${used.length ? `<div class="callout bad"><b>Không thể xóa</b><p>Mục này đang được dùng ở ${used.join(', ')}.</p></div>` : '<p class="muted" style="margin:0">Mục sẽ bị xóa khỏi danh mục dùng chung.</p>'}</div>
+      <footer><button class="btn" data-act="closeModal">${used.length ? 'Đóng' : 'Hủy'}</button>${used.length ? '' : '<button class="btn danger" data-act="dmDel">Xóa</button>'}</footer></div></div>`;
+  }
   if (U.modal.type === 'excel') {
     const h = curHs(), L = mkLinesDT(1);
     return `<div class="ov"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mx-t"><header><h3 id="mx-t">Nhập dự toán chi từ Excel</h3><button class="btn sm ghost" data-act="closeModal">Đóng</button></header><div class="mb">
@@ -1749,6 +1823,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.dataset.chg) { CHG[el.dataset.chg](el.value); render(); return; }
+  if (el.dataset.pgsize) { const g = pgOf(el.dataset.pgsize); g.size = +el.value; g.p = 0; render(); return; }
   if (el.dataset.bind) { bindSet(el); later(); }
 });
 
