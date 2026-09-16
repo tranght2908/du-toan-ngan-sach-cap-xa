@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dự toán Ngân sách Phường Sen Hồng</title>
+<title>Quản lý dự toán ngân sách tỉnh Vĩnh Long</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Noto+Serif:wght@400;700&display=swap">
@@ -342,17 +342,17 @@ const clone = o => JSON.parse(JSON.stringify(o));
 
 const ROLES = {
   admin:     {ten: 'Quản trị hệ thống',             nguoi: 'Trần Minh Khoa',     cv: 'Cán bộ CNTT – đơn vị vận hành'},
-  lap:       {ten: 'Đơn vị lập dự toán',            nguoi: 'Nguyễn Thị Thu Hà',  cv: 'Công chức Tài chính – Kế toán phường'},
-  tiepnhan:  {ten: 'Cán bộ tiếp nhận',              nguoi: 'Lê Văn Phúc',        cv: 'Bộ phận tiếp nhận hồ sơ'},
-  thamtra:   {ten: 'Cán bộ thẩm tra',               nguoi: 'Phạm Thị Ngọc Lan',  cv: 'Ban Kinh tế – Ngân sách HĐND phường'},
-  thamquyen: {ten: 'Cấp có thẩm quyền',             nguoi: 'Võ Thanh Tùng',      cv: 'Chủ tịch HĐND phường'},
-  phanbo:    {ten: 'Bộ phận phân bổ / giao dự toán', nguoi: 'Huỳnh Kim Ngân',    cv: 'Bộ phận tổng hợp ngân sách'},
-  theodoi:   {ten: 'Kế toán / theo dõi',            nguoi: 'Đặng Quốc Bảo',      cv: 'Kế toán theo dõi dự toán sau giao'},
+  lap:       {ten: 'Đơn vị lập dự toán',            nguoi: 'Nguyễn Thị Thu Hà',  cv: 'Chuyên viên lập dự toán đơn vị'},
+  tiepnhan:  {ten: 'Cán bộ tiếp nhận',              nguoi: 'Lê Văn Phúc',        cv: 'Chuyên viên Sở Tài chính'},
+  thamtra:   {ten: 'Cán bộ thẩm tra',               nguoi: 'Phạm Thị Ngọc Lan',  cv: 'Chuyên viên Phòng Quản lý ngân sách – Sở Tài chính'},
+  thamquyen: {ten: 'Cấp có thẩm quyền',             nguoi: 'Võ Thanh Tùng',      cv: 'Lãnh đạo UBND tỉnh / HĐND tỉnh'},
+  phanbo:    {ten: 'Bộ phận phân bổ / giao dự toán', nguoi: 'Huỳnh Kim Ngân',    cv: 'Chuyên viên Phòng Quản lý ngân sách – Sở Tài chính'},
+  theodoi:   {ten: 'Kế toán / theo dõi',            nguoi: 'Đặng Quốc Bảo',      cv: 'Chuyên viên Sở Tài chính theo dõi dự toán sau giao'},
 };
 
 const DM = {
   nguon: [
-    {ma: 'N1', ten: 'Nguồn được giao'},
+    {ma: 'N1', ten: 'Thu, bổ sung từ ngân sách trung ương'},
     {ma: 'N2', ten: 'Kết dư / chuyển nguồn'},
     {ma: 'N3', ten: 'Bổ sung cân đối'},
     {ma: 'N4', ten: 'Bổ sung có mục tiêu'},
@@ -371,66 +371,66 @@ const DM = {
     {ma: 'DP', ten: 'Dự phòng ngân sách'},
   ],
   donVi: [
-    {ma: 'DV01', ten: 'Văn phòng HĐND và UBND phường'},
-    {ma: 'DV02', ten: 'Ủy ban MTTQ Việt Nam phường'},
-    {ma: 'DV03', ten: 'Trường Mầm non Sen Hồng'},
-    {ma: 'DV04', ten: 'Trường Tiểu học Sen Hồng'},
-    {ma: 'DV05', ten: 'Trường THCS Sen Hồng'},
-    {ma: 'DV06', ten: 'Trạm Y tế phường Sen Hồng'},
-    {ma: 'DV07', ten: 'Công an phường Sen Hồng'},
-    {ma: 'DV08', ten: 'Ban Chỉ huy Quân sự phường'},
-    {ma: 'DV09', ten: 'Phòng Kinh tế, Hạ tầng và Đô thị'},
-    {ma: 'DV10', ten: 'Ban QLDA đầu tư xây dựng phường', cdt: true},
-    {ma: 'DV11', ten: 'Hội Liên hiệp Phụ nữ phường'},
-    {ma: 'DV12', ten: 'Đoàn TNCS Hồ Chí Minh phường'},
-    {ma: 'DV13', ten: 'Hội Cựu chiến binh phường'},
-    {ma: 'DV14', ten: 'Hội Nông dân phường'},
-    {ma: 'DV15', ten: 'Trường Mầm non Tuổi Ngọc'},
-    {ma: 'DV16', ten: 'Trường Tiểu học Nguyễn Trãi'},
-    {ma: 'DV17', ten: 'Trường THCS Lê Quý Đôn'},
-    {ma: 'DV18', ten: 'Trung tâm Dịch vụ tổng hợp phường'},
+    {ma: 'DV01', ten: 'Văn phòng UBND tỉnh Vĩnh Long'},
+    {ma: 'DV02', ten: 'Ủy ban MTTQ Việt Nam tỉnh Vĩnh Long'},
+    {ma: 'DV03', ten: 'Sở Giáo dục và Đào tạo'},
+    {ma: 'DV04', ten: 'Sở Y tế'},
+    {ma: 'DV05', ten: 'Sở Văn hóa, Thể thao và Du lịch'},
+    {ma: 'DV06', ten: 'Công an tỉnh Vĩnh Long'},
+    {ma: 'DV07', ten: 'Bộ Chỉ huy Quân sự tỉnh'},
+    {ma: 'DV08', ten: 'Sở Nông nghiệp và Môi trường'},
+    {ma: 'DV09', ten: 'Sở Xây dựng'},
+    {ma: 'DV10', ten: 'Ban Quản lý dự án đầu tư xây dựng tỉnh', cdt: true},
+    {ma: 'DV11', ten: 'Sở Khoa học và Công nghệ'},
+    {ma: 'DV12', ten: 'Sở Nội vụ'},
+    {ma: 'DV13', ten: 'Sở Công Thương'},
+    {ma: 'DV14', ten: 'Sở Tư pháp'},
+    {ma: 'DV15', ten: 'UBND phường Long Châu'},
+    {ma: 'DV16', ten: 'UBND phường Phước Hậu'},
+    {ma: 'DV17', ten: 'UBND phường Thanh Đức'},
+    {ma: 'DV18', ten: 'UBND xã An Bình'},
   ],
   nhiemVu: [
-    {ma: 'NV01', ten: 'Chi hoạt động bộ máy quản lý nhà nước', lv: 'QLNN', dv: 'DV01'},
-    {ma: 'NV02', ten: 'Chi hoạt động HĐND phường', lv: 'QLNN', dv: 'DV01'},
-    {ma: 'NV03', ten: 'Chi hoạt động Ủy ban MTTQ phường', lv: 'QLNN', dv: 'DV02'},
-    {ma: 'NV04', ten: 'Chi thường xuyên Trường Mầm non Sen Hồng', lv: 'GD', dv: 'DV03'},
-    {ma: 'NV05', ten: 'Chi thường xuyên Trường Tiểu học Sen Hồng', lv: 'GD', dv: 'DV04'},
-    {ma: 'NV06', ten: 'Chi thường xuyên Trường THCS Sen Hồng', lv: 'GD', dv: 'DV05'},
-    {ma: 'NV07', ten: 'Mua sắm thiết bị dạy học lớp 1–5', lv: 'GD', dv: 'DV04'},
-    {ma: 'NV08', ten: 'Chi hoạt động Trạm Y tế phường', lv: 'YT', dv: 'DV06'},
+    {ma: 'NV01', ten: 'Chi hoạt động bộ máy cơ quan hành chính cấp tỉnh', lv: 'QLNN', dv: 'DV01'},
+    {ma: 'NV02', ten: 'Chi hoạt động HĐND tỉnh', lv: 'QLNN', dv: 'DV01'},
+    {ma: 'NV03', ten: 'Chi hoạt động Ủy ban MTTQ Việt Nam tỉnh', lv: 'QLNN', dv: 'DV02'},
+    {ma: 'NV04', ten: 'Chi sự nghiệp giáo dục mầm non', lv: 'GD', dv: 'DV03'},
+    {ma: 'NV05', ten: 'Chi sự nghiệp giáo dục tiểu học', lv: 'GD', dv: 'DV03'},
+    {ma: 'NV06', ten: 'Chi sự nghiệp giáo dục trung học cơ sở', lv: 'GD', dv: 'DV03'},
+    {ma: 'NV07', ten: 'Mua sắm thiết bị dạy học theo Chương trình GDPT', lv: 'GD', dv: 'DV03'},
+    {ma: 'NV08', ten: 'Chi hoạt động y tế dự phòng và y tế cơ sở', lv: 'YT', dv: 'DV04'},
     {ma: 'NV09', ten: 'Phòng, chống dịch sốt xuất huyết', lv: 'YT', dv: 'DV06'},
-    {ma: 'NV10', ten: 'Bảo đảm trật tự, an toàn xã hội', lv: 'ANQP', dv: 'DV07'},
-    {ma: 'NV11', ten: 'Huấn luyện dân quân tự vệ', lv: 'ANQP', dv: 'DV08'},
+    {ma: 'NV10', ten: 'Bảo đảm an ninh, trật tự trên địa bàn tỉnh', lv: 'ANQP', dv: 'DV06'},
+    {ma: 'NV11', ten: 'Nhiệm vụ quốc phòng địa phương', lv: 'ANQP', dv: 'DV07'},
     {ma: 'NV12', ten: 'Trợ cấp bảo trợ xã hội', lv: 'DBXH', dv: 'DV01'},
-    {ma: 'NV13', ten: 'Duy tu, sửa chữa đường giao thông nội ô', lv: 'KT', dv: 'DV09'},
-    {ma: 'NV14', ten: 'Chỉnh trang đô thị, chiếu sáng công cộng', lv: 'KT', dv: 'DV09'},
-    {ma: 'NV15', ten: 'Dự án nâng cấp đường liên khóm 3 – khóm 4', lv: 'DT', dv: 'DV10'},
-    {ma: 'NV16', ten: 'Dự án xây dựng Nhà văn hóa khóm 2', lv: 'DT', dv: 'DV10'},
-    {ma: 'NV17', ten: 'Văn hóa – thể thao – thông tin cơ sở', lv: 'VH', dv: 'DV18'},
+    {ma: 'NV13', ten: 'Duy tu, sửa chữa hạ tầng giao thông tỉnh', lv: 'KT', dv: 'DV09'},
+    {ma: 'NV14', ten: 'Phát triển hạ tầng đô thị và chiếu sáng công cộng', lv: 'KT', dv: 'DV09'},
+    {ma: 'NV15', ten: 'Dự án hạ tầng giao thông kết nối liên vùng', lv: 'DT', dv: 'DV10'},
+    {ma: 'NV16', ten: 'Dự án công trình văn hóa cấp tỉnh', lv: 'DT', dv: 'DV10'},
+    {ma: 'NV17', ten: 'Hoạt động văn hóa, thể thao và du lịch', lv: 'VH', dv: 'DV05'},
     {ma: 'NV18', ten: 'Dự phòng ngân sách', lv: 'DP', dv: 'DV01'},
-    {ma: 'NV19', ten: 'Khắc phục sạt lở bờ sông khu vực khóm 1', lv: 'KT', dv: 'DV10'},
+    {ma: 'NV19', ten: 'Khắc phục sạt lở bờ sông, bờ biển', lv: 'KT', dv: 'DV10'},
     {ma: 'NV20', ten: 'Vật tư phòng, chống dịch tay chân miệng', lv: 'YT', dv: 'DV06'},
     {ma: 'NV21', ten: 'Hỗ trợ hoạt động Hội Liên hiệp Phụ nữ', lv: 'QLNN', dv: 'DV11'},
     {ma: 'NV22', ten: 'Hỗ trợ hoạt động Đoàn Thanh niên', lv: 'QLNN', dv: 'DV12'},
     {ma: 'NV23', ten: 'Hỗ trợ hoạt động Hội Cựu chiến binh', lv: 'QLNN', dv: 'DV13'},
     {ma: 'NV24', ten: 'Hỗ trợ hoạt động Hội Nông dân', lv: 'QLNN', dv: 'DV14'},
-    {ma: 'NV25', ten: 'Chi thường xuyên Trường Mầm non Tuổi Ngọc', lv: 'GD', dv: 'DV15'},
-    {ma: 'NV26', ten: 'Chi thường xuyên Trường Tiểu học Nguyễn Trãi', lv: 'GD', dv: 'DV16'},
-    {ma: 'NV27', ten: 'Chi thường xuyên Trường THCS Lê Quý Đôn', lv: 'GD', dv: 'DV17'},
-    {ma: 'NV28', ten: 'Hỗ trợ hoạt động Ban điều hành các khóm', lv: 'QLNN', dv: 'DV01'},
-    {ma: 'NV29', ten: 'Thu gom, vận chuyển rác thải sinh hoạt', lv: 'KT', dv: 'DV18'},
-    {ma: 'NV30', ten: 'Chăm sóc cây xanh, công viên', lv: 'KT', dv: 'DV18'},
-    {ma: 'NV31', ten: 'Dự án xây dựng điểm phụ Trường Mầm non Tuổi Ngọc', lv: 'DT', dv: 'DV10'},
-    {ma: 'NV32', ten: 'Dự án nạo vét kênh thoát nước khóm 5', lv: 'DT', dv: 'DV10'},
-    {ma: 'NV33', ten: 'Dự án lắp đặt camera an ninh các tuyến chính', lv: 'DT', dv: 'DV10'},
-    {ma: 'NV34', ten: 'Chuyển đổi số, dịch vụ công trực tuyến', lv: 'QLNN', dv: 'DV01'},
+    {ma: 'NV25', ten: 'Bổ sung cân đối cho UBND phường Long Châu', lv: 'QLNN', dv: 'DV15'},
+    {ma: 'NV26', ten: 'Bổ sung cân đối cho UBND phường Phước Hậu', lv: 'QLNN', dv: 'DV16'},
+    {ma: 'NV27', ten: 'Bổ sung cân đối cho UBND phường Thanh Đức', lv: 'QLNN', dv: 'DV17'},
+    {ma: 'NV28', ten: 'Bổ sung cân đối cho UBND xã An Bình', lv: 'QLNN', dv: 'DV18'},
+    {ma: 'NV29', ten: 'Bảo vệ môi trường và xử lý chất thải', lv: 'KT', dv: 'DV08'},
+    {ma: 'NV30', ten: 'Phòng, chống thiên tai và biến đổi khí hậu', lv: 'KT', dv: 'DV08'},
+    {ma: 'NV31', ten: 'Dự án trường học vùng khó khăn', lv: 'DT', dv: 'DV10'},
+    {ma: 'NV32', ten: 'Dự án thủy lợi, chống ngập và cấp nước', lv: 'DT', dv: 'DV10'},
+    {ma: 'NV33', ten: 'Dự án hạ tầng số và trung tâm điều hành', lv: 'DT', dv: 'DV10'},
+    {ma: 'NV34', ten: 'Chuyển đổi số và cung cấp dịch vụ công', lv: 'QLNN', dv: 'DV11'},
     {ma: 'NV35', ten: 'Đào tạo, bồi dưỡng cán bộ, công chức', lv: 'QLNN', dv: 'DV01'},
-    {ma: 'NV36', ten: 'Tổ chức lễ, kỷ niệm các ngày lễ lớn', lv: 'VH', dv: 'DV18'},
+    {ma: 'NV36', ten: 'Tổ chức sự kiện văn hóa, lễ hội cấp tỉnh', lv: 'VH', dv: 'DV05'},
     {ma: 'NV37', ten: 'Hỗ trợ hộ nghèo, cận nghèo dịp Tết', lv: 'DBXH', dv: 'DV01'},
     {ma: 'NV38', ten: 'Tiêm chủng mở rộng, khám sức khỏe người cao tuổi', lv: 'YT', dv: 'DV06'},
     {ma: 'NV39', ten: 'Phòng, chống thiên tai – khắc phục hậu quả mưa lũ', lv: 'KT', dv: 'DV01'},
-    {ma: 'NV40', ten: 'Mua sắm trang thiết bị Trạm Y tế', lv: 'YT', dv: 'DV06'},
+    {ma: 'NV40', ten: 'Mua sắm trang thiết bị y tế', lv: 'YT', dv: 'DV04'},
   ],
   bieuMau: [
     {ma: 'BM01', ten: 'Tờ trình đề nghị dự toán', bb: true},
@@ -451,9 +451,9 @@ const nvOf = ma => DM.nhiemVu.find(x => x.ma === ma) || {};
 
 /* Định mức phân bổ chi thường xuyên (giả định): số lượng × định mức (triệu đồng/đơn vị/năm); hệ số theo năm ngân sách */
 const DINH_MUC = {
-  NV01: {dvt: 'biên chế', sl: 38, dm: 180}, NV04: {dvt: 'trẻ', sl: 402, dm: 6.1}, NV25: {dvt: 'trẻ', sl: 318, dm: 6.85},
-  NV05: {dvt: 'học sinh', sl: 896, dm: 4.05}, NV26: {dvt: 'học sinh', sl: 1024, dm: 3.6}, NV06: {dvt: 'học sinh', sl: 731, dm: 4.35},
-  NV27: {dvt: 'học sinh', sl: 812, dm: 4.25}, NV08: {dvt: 'người dân', sl: 38460, dm: 0.032},
+  NV01: {dvt: 'biên chế', sl: 126, dm: 210}, NV04: {dvt: 'học sinh', sl: 18200, dm: 5.8}, NV25: {dvt: 'học sinh', sl: 14600, dm: 5.5},
+  NV05: {dvt: 'học sinh', sl: 22100, dm: 4.2}, NV26: {dvt: 'học sinh', sl: 16800, dm: 4.1}, NV06: {dvt: 'học sinh', sl: 15200, dm: 4.6},
+  NV27: {dvt: 'học sinh', sl: 13800, dm: 4.4}, NV08: {dvt: 'người dân', sl: 1540000, dm: 0.035},
 };
 const DM_HESO = {2025: 0.88, 2026: 0.94};
 const dmOf = (nv, nam) => { const d = DINH_MUC[nv]; if (!d) return null; const dm = +(d.dm * (DM_HESO[nam] || 1)).toFixed(4); return {...d, dm, tien: Math.round(d.sl * dm) * TR}; };
@@ -489,7 +489,7 @@ const STEPS = ['Mở kỳ', 'Lập hồ sơ', 'Gửi hồ sơ', 'Tiếp nhận',
 const TPL = [
   ['NV01', 'N1', 'TC', 6850, 'Định mức chi QLNN theo Nghị quyết HĐND tỉnh; 38 biên chế, 12 người hoạt động không chuyên trách'],
   ['NV02', 'N1', 'TC', 980, 'Định mức hoạt động HĐND; 2 kỳ họp thường lệ, 1 kỳ họp chuyên đề'],
-  ['NV03', 'N1', 'TC', 1150, 'Định mức hỗ trợ hoạt động Ủy ban MTTQ phường'],
+  ['NV03', 'N1', 'TC', 1150, 'Định mức hỗ trợ hoạt động Ủy ban MTTQ Việt Nam tỉnh'],
   ['NV21', 'N1', 'TC', 180, 'Định mức hỗ trợ tổ chức chính trị – xã hội'],
   ['NV22', 'N1', 'TC', 160, 'Định mức hỗ trợ tổ chức chính trị – xã hội'],
   ['NV23', 'N1', 'TC', 120, 'Định mức hỗ trợ tổ chức chính trị – xã hội'],
@@ -517,7 +517,7 @@ const TPL = [
   ['NV36', 'N1', 'KTC', 380, 'Kế hoạch tổ chức lễ, kỷ niệm các ngày lễ lớn trong năm'],
   ['NV34', 'N1', 'KTC', 420, 'Kế hoạch chuyển đổi số; duy trì dịch vụ công trực tuyến toàn trình'],
   ['NV35', 'N1', 'KTC', 260, 'Kế hoạch đào tạo, bồi dưỡng 45 lượt cán bộ, công chức'],
-  ['NV15', 'N2', 'KTC', 4200, 'Nghị quyết HĐND phường phê duyệt chủ trương đầu tư; kế hoạch đầu tư công trung hạn 2026–2030'],
+  ['NV15', 'N2', 'KTC', 4200, 'Nghị quyết HĐND tỉnh phê duyệt chủ trương đầu tư; kế hoạch đầu tư công trung hạn 2026–2030'],
   ['NV16', 'N4', 'KTC', 2600, 'Quyết định phê duyệt báo cáo kinh tế – kỹ thuật công trình Nhà văn hóa khóm 2'],
   ['NV31', 'N4', 'KTC', 3200, 'Quyết định phê duyệt chủ trương đầu tư điểm phụ Trường Mầm non Tuổi Ngọc'],
   ['NV32', 'N2', 'KTC', 1800, 'Báo cáo kinh tế – kỹ thuật nạo vét 2,4 km kênh thoát nước khóm 5'],
@@ -525,9 +525,9 @@ const TPL = [
   ['NV18', 'N1', 'KTC', 1150, 'Dự phòng ngân sách 2,1% tổng chi cân đối'],
 ];
 const NGUON_VB = {
-  N1: 'Quyết định giao dự toán thu, chi NSNN năm {Y} của UBND tỉnh',
-  N2: 'Báo cáo quyết toán ngân sách phường năm {Y2}: kết dư và nguồn chuyển sang',
-  N3: 'Thông báo số bổ sung cân đối từ ngân sách tỉnh cho ngân sách phường năm {Y}',
+  N1: 'Quyết định giao dự toán thu, chi NSNN năm {Y} của cấp có thẩm quyền',
+  N2: 'Báo cáo quyết toán ngân sách tỉnh năm {Y2}: kết dư và nguồn chuyển sang',
+  N3: 'Thông báo số bổ sung cân đối từ ngân sách trung ương cho ngân sách tỉnh năm {Y}',
   N4: 'Thông báo bổ sung có mục tiêu năm {Y}: chương trình giáo dục, y tế, hạ tầng',
   N5: 'Quyết định bổ sung phát sinh của UBND tỉnh năm {Y}',
 };
@@ -550,7 +550,7 @@ function mkNguonDK(nam, lines) {
 function takeVB(S, nam) { S.vbSeq[nam] = S.vbSeq[nam] || 1; return (S.vbSeq[nam]++) + '/QĐ-UBND'; }
 const vbNo = nam => (S.vbSeq[nam] || 1) + '/QĐ-UBND';
 const mkKy = (nam, st, moAt) => ({nam, st, tu: `${nam - 1}-09-15`, den: `${nam - 1}-10-31`, moAt,
-  bieuMau: DM.bieuMau.map(b => b.ma), nguon: DM.nguon.map(x => x.ma), lv: DM.linhVuc.map(x => x.ma), chiTieu: DM.chiTieu.slice(), dvLap: 'Bộ phận Tài chính – Kế toán phường'});
+  bieuMau: DM.bieuMau.map(b => b.ma), nguon: DM.nguon.map(x => x.ma), lv: DM.linhVuc.map(x => x.ma), chiTieu: DM.chiTieu.slice(), dvLap: 'Các sở, ban, ngành và UBND xã, phường'});
 const logs = (S, h, arr) => arr.forEach(([t, role, buoc, act, note]) => S.log.push({t, role, hs: h.id, buoc, act, note: note || ''}));
 
 /* Hồ sơ dự toán năm đã đi hết luồng tới giao */
@@ -558,11 +558,11 @@ function seedDT(S, nam, scale, o) {
   const Y = nam - 1, L = mkLinesDT(scale), ret = !!o.ret;
   L.forEach(l => { l.thamTra = l.deNghi; l.duyet = l.deNghi; });
   (o.adj || []).forEach(([nv, tr, yk]) => { const l = L.find(x => x.nv === nv); l.thamTra = l.duyet = l.deNghi + tr * TR; l.ykTT = yk; });
-  const h = {id: 'hs' + nam, ma: `HS-${nam}-001`, nam, loai: 'DT', ten: `Dự toán ngân sách phường Sen Hồng năm ${nam}`,
+  const h = {id: 'hs' + nam, ma: `HS-${nam}-001`, nam, loai: 'DT', ten: `Dự toán ngân sách tỉnh Vĩnh Long năm ${nam}`,
     path: ['start', 'n1', 'n2', 'n3', 'n4', 'd1'].concat(ret ? ['r1', 'n3', 'n4', 'd1'] : [], ['n5', 'd2', 'n6', 'n7', 'd3', 'n8', 'n9', 'n10']),
     phienBan: ret ? 2 : 1, lines: L, nguonDK: mkNguonDK(nam, L), canCuChung: `Luật Ngân sách nhà nước số 89/2025/QH15; hướng dẫn xây dựng dự toán năm ${nam} của UBND tỉnh.`,
     taiLieu: DM.bieuMau.slice(0, 4).map(b => ({id: uid('T'), bm: b.ma, ten: `${b.ten} năm ${nam}.pdf`, ngay: `${Y}-10-20`})),
-    giaiTrinh: '', ykienTT: 'Dự toán lập đúng định mức, cân đối được nguồn. Đề nghị HĐND phường xem xét thông qua.',
+    giaiTrinh: '', ykienTT: 'Dự toán lập đúng định mức, cân đối được nguồn. Đề nghị HĐND tỉnh xem xét, quyết định.',
     toTrinh: {so: o.tt, ngay: `${Y}-12-05`}, quyetDinh: {so: o.qd, ngay: `${Y}-12-18`}, checklist: {}, versions: [], lastReturn: null, duyetAt: `${Y}-12-18T15:00:00`};
   const bare = () => clone(L).map(l => ({...l, thamTra: null, ykTT: '', duyet: null}));
   if (ret) h.versions.push({v: 1, t: `${Y}-10-20T09:10:00`, nguoi: ROLES.lap.nguoi, lines: bare(), nguonDK: clone(h.nguonDK), taiLieu: clone(h.taiLieu.slice(0, 3)), giaiTrinh: '',
@@ -779,8 +779,8 @@ function shell() {
   <header class="topbar">
     <div class="seal" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#E8B53A" d="M12 2.5l2.7 6.6 7.1.5-5.4 4.6 1.7 6.9L12 17.3l-6.1 3.8 1.7-6.9L2.2 9.6l7.1-.5z"/></svg></div>
     <div class="agency">
-      <small>UBND phường Sen Hồng</small>
-      <b>Phần mềm quản lý dự toán ngân sách cấp xã</b>    </div>
+      <small>SỞ TÀI CHÍNH TỈNH VĨNH LONG</small>
+      <b>Phần mềm quản lý dự toán ngân sách tỉnh</b>    </div>
     <div class="tools">
       <div class="tool"><label for="sel-nam">Năm ngân sách</label>
         <select id="sel-nam" data-chg="nam">${years().map(y => `<option value="${y}" ${y === U.nam ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
@@ -1039,7 +1039,7 @@ function vHoSo() {
   const lr = h.lastReturn && n.ret ? `<div class="callout" style="margin-bottom:12px"><b>Hồ sơ bị trả lại ở Bước ${h.lastReturn.buoc} – ${esc(ROLES[h.lastReturn.role].ten)} (${dtt(h.lastReturn.t)})</b><p>${esc(h.lastReturn.note)}</p><p class="small" style="margin-top:6px">Phiên bản ${h.phienBan - 1} đã được lưu và khóa cùng toàn bộ tài liệu, số liệu (xem tab Phiên bản). Đơn vị đang chỉnh sửa trên phiên bản ${h.phienBan} được sinh ra từ phiên bản ${h.phienBan - 1}.</p></div>` : '';
   const lock = nodeOf(h) === 'n7' ? `<div class="callout lock" style="margin-bottom:12px"><b>Phiên bản ${h.phienBan} đang được cấp có thẩm quyền xem xét – đã khóa</b><p>Trình lúc ${dtt(h.trinhAt)} · Tờ trình ${esc(h.toTrinh?.so || '')}. Không ai được sửa cho đến khi có quyết định.</p></div>` : '';
   return pageHead(`<a href="#" ${go('hoso')}>Hồ sơ</a> / ${esc(h.ma)}`, esc(h.ten),
-    `${h.loai === 'DT' ? 'Hồ sơ dự toán năm' : 'Hồ sơ điều chỉnh/bổ sung'} · ${esc(h.ma)} · Phiên bản ${h.phienBan} · Đơn vị lập: Bộ phận Tài chính – Kế toán phường`, stChip(h))
+    `${h.loai === 'DT' ? 'Hồ sơ dự toán năm' : 'Hồ sơ điều chỉnh/bổ sung'} · ${esc(h.ma)} · Phiên bản ${h.phienBan} · Đơn vị lập: Sở, ban, ngành hoặc UBND xã, phường`, stChip(h))
     + `<section class="panel" style="margin-bottom:14px"><div class="pb">${stepper(h)}</div></section>` + lr + lock
     + `<div class="hsgrid">
       <section class="panel" style="min-width:0"><div class="tabs">${tabs.map(([k, t]) => `<button class="${tab === k ? 'on' : ''}" data-act="tab" data-tab="${k}">${t}</button>`).join('')}</div>${body}</section>
@@ -1050,7 +1050,7 @@ function vHoSo() {
 /* ================= KHUNG XỬ LÝ, PHÂN BỔ, GIAO ================= */
 const todayIso = () => isoDay(new Date());
 /* Nội dung điền sẵn cho các ô nhập liệu khi demo */
-const DEF_YK = 'Dự toán lập đúng định mức, căn cứ đầy đủ, cân đối được nguồn. Đề nghị trình HĐND phường xem xét, quyết định.';
+const DEF_YK = 'Dự toán lập đúng định mức, căn cứ đầy đủ, cân đối được nguồn. Đề nghị trình HĐND tỉnh xem xét, quyết định.';
 const DEF_TT_RET = 'Đề nghị đơn vị bổ sung thuyết minh căn cứ định mức cho các nhiệm vụ có mức đề nghị tăng trên 10% so với năm trước.';
 const DEF_QD_RET = 'Đề nghị làm rõ cơ sở tăng chi sự nghiệp giáo dục so với năm trước và bổ sung thuyết minh nguồn kết dư.';
 const defGT = h => h.lastReturn ? `Tiếp thu ý kiến của ${ROLES[h.lastReturn.role].ten}: “${h.lastReturn.note}” Đơn vị đã rà soát, điều chỉnh số liệu và bổ sung thuyết minh tương ứng.` : '';
@@ -1109,16 +1109,16 @@ function bcDoc(h) {
   const tn = S.log.filter(l => l.hs === h.id && /^Tiếp nhận/.test(l.act)).pop();
   const so = n => fmtS(n).replace(/^\+/, dc ? '+' : '');
   return `<div class="pb"><div class="doc">
-    <div class="hd"><div><b>HĐND PHƯỜNG SEN HỒNG</b><b>BAN KINH TẾ – NGÂN SÁCH</b><span>Số: ${esc(bc ? bc.so : '…/BC-BKTNS')}</span></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u><br><i>Sen Hồng, ngày ${dt(bc ? bc.ngay : todayIso())}</i></div></div>
+    <div class="hd"><div><b>SỞ TÀI CHÍNH TỈNH VĨNH LONG</b><b>PHÒNG QUẢN LÝ NGÂN SÁCH</b><span>Số: ${esc(bc ? bc.so : '…/BC-STC')}</span></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u><br><i>Vĩnh Long, ngày ${dt(bc ? bc.ngay : todayIso())}</i></div></div>
     ${draft ? '<div style="text-align:center;margin-top:10px"><span class="draft">DỰ THẢO</span></div>' : ''}
     <h4>BÁO CÁO THẨM TRA</h4><div class="sub">${esc(h.ten)}</div>
-    <p><b>I. Hồ sơ thẩm tra.</b> Hồ sơ ${esc(h.ma)}, phiên bản ${h.phienBan}, do Bộ phận Tài chính – Kế toán phường lập${tn ? `; tiếp nhận ngày ${dt(tn.t)}` : ''}. Tổng ${dc ? 'tăng/giảm đề nghị' : 'dự toán đề nghị'}: ${so(tDN)} đồng.</p>
+    <p><b>I. Hồ sơ thẩm tra.</b> Hồ sơ ${esc(h.ma)}, phiên bản ${h.phienBan}, do đơn vị dự toán lập${tn ? `; tiếp nhận ngày ${dt(tn.t)}` : ''}. Tổng ${dc ? 'tăng/giảm đề nghị' : 'dự toán đề nghị'}: ${so(tDN)} đồng.</p>
     <p><b>II. Kết quả thẩm tra.</b> Tổng mức sau thẩm tra: ${so(tTT)} đồng (chênh lệch ${fmtS(tTT - tDN)} đồng so với đề nghị).</p>
     ${ch.length ? `<table><thead><tr><th>Nhiệm vụ</th><th>Đề nghị</th><th>Sau thẩm tra</th><th>Chênh lệch</th><th>Ý kiến</th></tr></thead><tbody>${ch.map(l => `<tr><td>${esc(nm('nhiemVu', l.nv))}</td><td class="num">${fmt(l.deNghi)}</td><td class="num">${fmt(l.thamTra)}</td><td class="num">${fmtS(l.thamTra - l.deNghi)}</td><td>${esc(l.ykTT)}</td></tr>`).join('')}</tbody></table>` : '<p>Các nhiệm vụ thống nhất với mức đề nghị của đơn vị.</p>'}
     ${cd.length ? `<p>Cân đối nguồn: ${cd.map(x => `${esc(x.ten)} ${x.cl < 0 ? `vượt ${fmt(-x.cl)} đồng` : 'cân đối được'}`).join('; ')}.</p>` : ''}
     <p><b>III. Ý kiến thẩm tra.</b> ${esc(h.ykienTT || DEF_YK)}</p>
-    <p><b>IV. Kiến nghị.</b> Đề nghị HĐND phường xem xét, quyết định.</p>
-    <div class="signbox"><b>TM. BAN KINH TẾ – NGÂN SÁCH<br>TRƯỞNG BAN</b><br>${bc && bc.kySo ? sigBadge(bc.kySo) : '<i>(Ký số khi trình)</i>'}<br>${esc(ROLES.thamtra.nguoi)}</div>
+    <p><b>IV. Kiến nghị.</b> Đề nghị UBND tỉnh, HĐND tỉnh xem xét, quyết định theo thẩm quyền.</p>
+    <div class="signbox"><b>KT. GIÁM ĐỐC SỞ TÀI CHÍNH<br>TRƯỞNG PHÒNG</b><br>${bc && bc.kySo ? sigBadge(bc.kySo) : '<i>(Ký số khi trình)</i>'}<br>${esc(ROLES.thamtra.nguoi)}</div>
   </div><p class="small muted">${draft ? 'Dự thảo tự cập nhật theo mức sau thẩm tra và ý kiến thẩm tra; được chốt và ký số khi trình cấp có thẩm quyền (Bước 6).' : 'Báo cáo đã chốt và ký số khi trình – là thành phần của hồ sơ trình.'}</p></div>`;
 }
 
@@ -1259,9 +1259,9 @@ function vGiao() {
       ${E ? `<div class="pb" style="padding-top:0"><div class="row"><button class="btn pri" data-act="kyAsk" data-next="giaoDo" data-vb="Quyết định giao dự toán cho ${esc(dvRec.ten)}">Ký số, ban hành &amp; giao dự toán</button>${dvs.length > 1 ? `<button class="btn" data-act="kyAsk" data-next="giaoAll" data-vb="${dvs.length} quyết định giao dự toán (ký lô)">Ký số lô &amp; giao tất cả ${dvs.length} đơn vị</button>` : ''}</div></div>` : ''}</section>
     </div>
     <section><div class="doc">
-      <div class="hd"><div><b>UBND PHƯỜNG SEN HỒNG</b><span>Số: ${esc(soVB)}</span></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u><br><i>Sen Hồng, ngày ${dt(ngay)}</i></div></div>
+    <div class="hd"><div><b>UBND TỈNH VĨNH LONG</b><b>SỞ TÀI CHÍNH</b><span>Số: ${esc(soVB)}</span></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u><br><i>Vĩnh Long, ngày ${dt(ngay)}</i></div></div>
       <h4>QUYẾT ĐỊNH</h4><div class="sub">Về việc ${h.loai === 'DC' ? 'giao bổ sung, điều chỉnh' : 'giao'} dự toán ngân sách năm ${h.nam}</div>
-      <p>Căn cứ Luật Ngân sách nhà nước số 89/2025/QH15;<br>Căn cứ ${esc(h.quyetDinh?.so || '')} ngày ${dt(h.quyetDinh?.ngay)} của HĐND phường${h.loai === 'DC' ? ' về điều chỉnh, bổ sung dự toán' : ' về dự toán ngân sách'} năm ${h.nam};</p>
+  <p>Căn cứ Luật Ngân sách nhà nước số 89/2025/QH15;<br>Căn cứ ${esc(h.quyetDinh?.so || '')} ngày ${dt(h.quyetDinh?.ngay)} của HĐND tỉnh${h.loai === 'DC' ? ' về điều chỉnh, bổ sung dự toán' : ' về dự toán ngân sách'} năm ${h.nam};</p>
       <p><b>Điều 1.</b> Giao ${esc(dvRec.ten)}${dvRec.cdt ? ' (Chủ đầu tư)' : ''} dự toán ngân sách năm ${h.nam} như sau:</p>
       <table><thead><tr><th>Nhiệm vụ</th><th>Nguồn</th><th>Loại kinh phí</th><th>Số tiền (đồng)</th></tr></thead><tbody>
       ${inc.map(({p, l}) => `<tr><td>${esc(nm('nhiemVu', l.nv))}</td><td>${esc(nm('nguon', l.nguon))}</td><td>${esc(nm('loaiKP', l.loai))}</td><td class="num">${fmtS(amt(p)).replace(/^\+/, h.loai === 'DC' ? '+' : '')}</td></tr>`).join('')}
@@ -1406,7 +1406,7 @@ function vDm() {
 
 function vTk() {
   const acc = {admin: 'qt.khoa', lap: 'tckt.ha', tiepnhan: 'tn.phuc', thamtra: 'bktns.lan', thamquyen: 'hdnd.tung', phanbo: 'thns.ngan', theodoi: 'kt.bao'};
-  const scope = {admin: 'Toàn hệ thống', lap: 'Hồ sơ của phường', tiepnhan: 'Hồ sơ đã gửi', thamtra: 'Hồ sơ đã tiếp nhận', thamquyen: 'Hồ sơ đã trình', phanbo: 'Dự toán đã phê duyệt', theodoi: 'Dự toán đã giao'};
+  const scope = {admin: 'Toàn hệ thống', lap: 'Hồ sơ của đơn vị dự toán', tiepnhan: 'Hồ sơ đã gửi', thamtra: 'Hồ sơ đã tiếp nhận', thamquyen: 'Hồ sơ đã trình', phanbo: 'Dự toán đã phê duyệt', theodoi: 'Dự toán đã giao'};
   return pageHead('Quản trị', 'Tài khoản & phân quyền', 'Người dùng được phân quyền theo từng khâu của luồng nghiệp vụ.')
   + `<section class="panel"><div class="tw"><table class="t"><thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Chức danh</th><th>Vai trò</th><th>Bước được thao tác</th><th>Phạm vi dữ liệu</th><th>Trạng thái</th></tr></thead><tbody>
   ${Object.entries(ROLES).map(([k, r]) => `<tr><td><b>${acc[k]}</b></td><td>${esc(r.nguoi)}</td><td class="small">${esc(r.cv)}</td><td>${esc(r.ten)}</td><td>${ROLE_STEPS[k].join(', ')}</td><td class="small">${scope[k]}</td><td>${chip('Hoạt động', 'ok')}</td></tr>`).join('')}</tbody></table></div></section>`;
@@ -1485,7 +1485,7 @@ const CT_NGUON = ['N1', 'N3', 'N4'];
 const CT_LOAI = ['Thông báo số kiểm tra dự toán thu, chi NSNN', 'Quyết định giao dự toán thu, chi NSNN'];
 function ctDefault(nam) {
   const L = mkLinesDT(DM_HESO[nam] || 1), tot = n => sum(L.filter(l => l.nguon === n), l => l.deNghi);
-  return {loai: CT_LOAI[0], so: '458/TB-UBND', ngay: `${nam - 1}-08-20`, coQuan: 'UBND tỉnh', soKT: {N1: tot('N1'), N3: tot('N3'), N4: tot('N4') - (DM_HESO[nam] ? 0 : 170 * TR)}};
+  return {loai: CT_LOAI[0], so: '458/TB-STC', ngay: `${nam - 1}-08-20`, coQuan: 'Cơ quan tài chính cấp trên', soKT: {N1: tot('N1'), N3: tot('N3'), N4: tot('N4') - (DM_HESO[nam] ? 0 : 170 * TR)}};
 }
 function vCapTren() {
   const nam = U.nam, ct = S.capTren[nam], E = U.role === 'lap', d = ct || ctDefault(nam), hs = dtOfYear(nam);
@@ -1504,7 +1504,7 @@ function vCapTren() {
     <div class="tw"><table class="t"><thead><tr><th>Nguồn</th><th class="num">Số giao / số kiểm tra (đ)</th></tr></thead><tbody>
       ${CT_NGUON.map(n => `<tr><td>${esc(nm('nguon', n))}</td><td class="num" style="min-width:170px">${money('ct-' + n, 'f:ct_' + n, val(n, d.soKT[n]), !E)}</td></tr>`).join('')}
     </tbody><tfoot><tr><td>Tổng</td><td class="num">${fmt(sum(CT_NGUON, n => val(n, d.soKT[n]) || 0))}</td></tr></tfoot></table></div>
-    <p class="small muted" style="margin:0">Kết dư/chuyển nguồn do phường xác định theo quyết toán; bổ sung phát sinh trong năm lập hồ sơ điều chỉnh/bổ sung.</p>
+    <p class="small muted" style="margin:0">Kết dư/chuyển nguồn do tỉnh xác định theo quyết toán; bổ sung phát sinh trong năm lập hồ sơ điều chỉnh/bổ sung.</p>
     ${ct ? `<p class="small muted" style="margin:0">Ghi nhận lúc ${dtt(ct.t)} bởi ${esc(ct.nguoi)}.</p>` : ''}
     ${E ? `<div class="row"><button class="btn pri" data-act="ctSave">${ct ? 'Cập nhật' : 'Ghi nhận'} số giao</button>${hs && isEditable(hs) && ct ? `<button class="btn" ${go('hs', {id: hs.id})}>Mở hồ sơ ${esc(hs.ma)} để áp dụng</button>` : ''}</div>` : ''}
   </div></section>`;
@@ -1531,7 +1531,7 @@ function vBieu() {
   return `<div class="noprint">` + pageHead('Biểu mẫu', `Biểu mẫu báo cáo – năm ${nam}`, 'Biểu tổng hợp dự toán được duyệt và phân bổ, giao dự toán, lập tự động từ dữ liệu trên hệ thống.',
     `<button class="btn" data-act="bieuXls">Xuất Excel</button><button class="btn pri" data-act="bieuIn">In biểu</button>`)
   + `<section class="panel" style="margin-bottom:16px"><div class="tabs">${[['b1', 'Biểu 01 – Dự toán được duyệt'], ['b2', 'Biểu 02 – Phân bổ, giao dự toán']].map(([k, v]) => `<button class="${k === t ? 'on' : ''}" data-act="bmTab" data-tab="${k}">${v}</button>`).join('')}</div></section></div>
-  <div class="tw"><div class="doc" style="min-width:760px"><div class="hd"><div><b>UBND PHƯỜNG SEN HỒNG</b></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u></div></div>
+  <div class="tw"><div class="doc" style="min-width:760px"><div class="hd"><div><b>UBND TỈNH VĨNH LONG</b><b>SỞ TÀI CHÍNH</b></div><div><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><u><b>Độc lập – Tự do – Hạnh phúc</b></u></div></div>
     ${a.lines.length ? body : `<p style="text-align:center;margin-top:18px">Năm ${nam} chưa có dự toán được phê duyệt.</p>`}
     <div class="signbox"><b>NGƯỜI LẬP BIỂU</b><br><i>(Ký, ghi rõ họ tên)</i><br><br>${esc(ROLES.phanbo.nguoi)}</div></div></div>`;
 }
@@ -1748,7 +1748,7 @@ const ACT = {
   createDT() {
     const nam = U.nam, k = kyOf(nam);
     if (!need(k && k.st === 'Đang mở tiếp nhận', 'Kỳ lập dự toán chưa mở. Quản trị hệ thống cần mở kỳ ở Bước 1.')) return;
-    const h = {id: uid('hs'), ma: `HS-${nam}-001`, nam, loai: 'DT', ten: `Dự toán ngân sách phường Sen Hồng năm ${nam}`, path: ['start', 'n1', 'n2'], phienBan: 1, lines: [], nguonDK: [],
+  const h = {id: uid('hs'), ma: `HS-${nam}-001`, nam, loai: 'DT', ten: `Dự toán ngân sách tỉnh Vĩnh Long năm ${nam}`, path: ['start', 'n1', 'n2'], phienBan: 1, lines: [], nguonDK: [],
       canCuChung: '', taiLieu: [], giaiTrinh: '', ykienTT: '', toTrinh: null, quyetDinh: null, checklist: {}, versions: [], lastReturn: null, duyetAt: null};
     fillHs(h); S.hoSo.push(h); addLog('lap', h, 2, 'Tạo hồ sơ dự toán (nháp)'); goto('hs', {id: h.id});
     toast(`Đã tạo hồ sơ nháp ${h.ma} và điền sẵn ${h.lines.length} nhiệm vụ chi giả định`);
