@@ -350,6 +350,7 @@ details.panel > summary{list-style:none}
 <div id="app"></div>
 <div id="modal"></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="business-rules.js"></script>
 <script>
 /* ================= DỮ LIỆU & TIỆN ÍCH (toàn bộ dữ liệu là giả định) ================= */
 const LS_KEY = 'dtns-proto-v4';
@@ -1386,13 +1387,16 @@ function vCxl() {
 }
 
 /* ---------- Quản trị ---------- */
-/* Chặn đóng kỳ: chỉ đóng khi hồ sơ dự toán năm đã được cấp có thẩm quyền phê duyệt để phân bổ */
+/* Chặn đóng kỳ: tất cả hồ sơ dự toán năm phải hoàn tất giao dự toán ở Bước 10 */
 const dtOfYear = nam => S.hoSo.find(h => h.nam === nam && h.loai === 'DT');
-const canCloseKy = nam => { const h = dtOfYear(nam); return !!(h && isApproved(h)); };
+const annualHs = nam => S.hoSo.filter(h => h.nam === nam && h.loai === 'DT');
+const kyCloseState = nam => BudgetBusinessRules.evaluatePeriodClosure(annualHs(nam).map(h => ({id: h.id, ma: h.ma, loai: h.loai, node: nodeOf(h)})));
+const canCloseKy = nam => kyCloseState(nam).canClose;
 function kyCloseBox(nam) {
-  const h = dtOfYear(nam), ok = canCloseKy(nam);
-  return `<div class="callout ${ok ? 'ok' : ''}"><b>Điều kiện đóng kỳ lập dự toán năm ${nam}</b><p class="small">Chỉ được đóng kỳ khi dự toán năm đã được cấp có thẩm quyền phê duyệt (Bước 7) để phân bổ cho các đơn vị.</p>
-    <div style="margin-top:6px">${checkList([{ok, t: h ? `Hồ sơ ${h.ma}: ${stOf(h).st || stOf(h).ten} – Bước ${stOf(h).buoc}` : `Chưa có hồ sơ dự toán năm ${nam}`}])}</div></div>`;
+  const hs = annualHs(nam), state = kyCloseState(nam), ok = state.canClose;
+  const items = !hs.length ? [{ok: false, t: `Chưa có hồ sơ dự toán năm ${nam}`}] : hs.map(h => ({ok: nodeOf(h) === 'n10', t: `Hồ sơ ${h.ma}: ${stOf(h).st || stOf(h).ten} – Bước ${stOf(h).buoc}`}));
+  return `<div class="callout ${ok ? 'ok' : ''}"><b>Điều kiện đóng kỳ lập dự toán năm ${nam}</b><p class="small">Chỉ được đóng kỳ khi mọi hồ sơ dự toán năm đã hoàn tất Bước 10 – giao dự toán. Hồ sơ trả lại hoặc đang xử lý phải hoàn thành trước khi đóng kỳ.</p>
+    <div style="margin-top:6px">${checkList(items)}</div></div>`;
 }
 function vKy() {
   const nam = U.p.nam || 2027, k = kyOf(nam), E = U.role === 'admin' && k.st === 'Chưa mở';
@@ -1725,13 +1729,11 @@ function fillHs(h) {
 }
 
 /* Cập nhật kết quả xử lý vào phiên bản đang được xem xét (bản lưu giữ cả số liệu thẩm tra/duyệt tại thời điểm đó) */
-function markVer(h, st, ketQua) { const v = last(h.versions); if (!v) return; v.st = st; v.lines = clone(h.lines); if (ketQua) v.ketQua = ketQua; if (h.bcTT) v.bcTT = clone(h.bcTT); }
+function markVer(h, st, ketQua) { const v = h.versions.find(x => x.v === h.phienBan) || last(h.versions); if (!v) return; v.st = st; v.lines = clone(h.lines); v.nguonDK = clone(h.nguonDK); v.taiLieu = clone(h.taiLieu); v.giaiTrinh = h.giaiTrinh || ''; if (ketQua) v.ketQua = ketQua; if (h.bcTT) v.bcTT = clone(h.bcTT); }
 /* Trả hồ sơ: khóa phiên bản vừa xử lý kèm lý do, sinh phiên bản mới từ bản đó để đơn vị chỉnh sửa */
 function newVer(h, role, buoc) {
-  markVer(h, 'Bị trả lại', {...h.lastReturn});
-  h.phienBan = last(h.versions).v + 1;
-  h.lines.forEach(l => { l.thamTra = null; l.ykTT = ''; l.duyet = null; });
-  h.checklist = {}; h.bcTT = null;
+  const revised = BudgetBusinessRules.createRevision(h, h.lastReturn);
+  Object.assign(h, revised);
   addLog(role, h, buoc, `Lưu khóa phiên bản ${h.phienBan - 1}, sinh phiên bản ${h.phienBan} để chỉnh sửa`, 'Tài liệu và số liệu phiên bản cũ được giữ nguyên để đối chiếu');
 }
 
@@ -1772,9 +1774,9 @@ const ACT = {
   bieuXls() { toast(`Đã xuất ${U.p.bm === 'b2' ? 'Biểu 02' : 'Biểu 01'} năm ${U.nam} ra tệp Excel (mô phỏng)`); },
   kyOpen(d) { const k = kyOf(+d.nam); k.st = 'Đang mở tiếp nhận'; k.moAt = now(); addLog('admin', null, 1, 'Mở kỳ lập dự toán năm ' + k.nam, `Tiếp nhận từ ${dt(k.tu)} đến ${dt(k.den)}`); toast(`Đã mở kỳ lập dự toán năm ${k.nam}. Đơn vị lập dự toán có thể lập hồ sơ.`); },
   kyClose(d) {
-    const k = kyOf(+d.nam), h = dtOfYear(k.nam);
-    if (!need(canCloseKy(k.nam), `Chưa thể đóng kỳ ${k.nam}: dự toán năm chưa được cấp có thẩm quyền phê duyệt để phân bổ cho các đơn vị${h ? ` (hồ sơ ${h.ma} đang ở Bước ${stOf(h).buoc}: ${stOf(h).ten})` : ' (chưa có hồ sơ dự toán)'}.`)) return;
-    k.st = 'Đã đóng kỳ lập dự toán'; addLog('admin', null, 1, 'Đóng kỳ lập dự toán năm ' + k.nam, `Dự toán đã được phê duyệt: ${h.quyetDinh?.so || ''}`); toast('Đã đóng kỳ lập dự toán năm ' + k.nam);
+    const k = kyOf(+d.nam), state = kyCloseState(k.nam);
+    if (!need(state.canClose, `Chưa thể đóng kỳ ${k.nam}: còn ${state.blockers.length || '0'} hồ sơ dự toán chưa hoàn tất Bước 10${state.blockers.length ? ' – ' + state.blockers.map(x => { const h = S.hoSo.find(y => y.id === x.id); return `${x.ma} (Bước ${stOf(h).buoc}: ${stOf(h).ten})`; }).join(', ') : ' hoặc chưa có hồ sơ dự toán'}.`)) return;
+    k.st = 'Đã đóng kỳ lập dự toán'; addLog('admin', null, 1, 'Đóng kỳ lập dự toán năm ' + k.nam, 'Tất cả hồ sơ dự toán năm đã hoàn tất Bước 10 – giao dự toán'); toast('Đã đóng kỳ lập dự toán năm ' + k.nam);
   },
 
   /* Bước 2 – 3 */
@@ -1813,10 +1815,12 @@ const ACT = {
     const h = curHs(), v = validateHs(h);
     if (!need(v.ok, 'Hồ sơ chưa đủ điều kiện gửi – xem khung “Kiểm tra trước khi gửi”.')) return;
     const resend = h.versions.length > 0; h.phienBan = h.phienBan || 1;
-    h.versions.push({v: h.phienBan, t: now(), nguoi: ROLES.lap.nguoi, st: 'Đã gửi – chờ tiếp nhận', kySo: U.sig || null, nguonDK: clone(h.nguonDK), lines: clone(h.lines), taiLieu: clone(h.taiLieu), giaiTrinh: h.giaiTrinh || (['r2', 'r3'].includes(nodeOf(h)) ? defGT(h) : '')});
+    const sent = {v: h.phienBan, t: now(), sentAt: now(), nguoi: ROLES.lap.nguoi, st: 'Đã gửi – chờ tiếp nhận', kySo: U.sig || null, nguonDK: clone(h.nguonDK), lines: clone(h.lines), taiLieu: clone(h.taiLieu), giaiTrinh: h.giaiTrinh || (['r2', 'r3'].includes(nodeOf(h)) ? defGT(h) : '')};
+    const draftVersion = h.versions.find(x => x.v === h.phienBan && x.st === 'Bản sửa – chưa gửi');
+    if (draftVersion) Object.assign(draftVersion, sent); else h.versions.push(sent);
     h.lines.forEach(l => { l.thamTra = null; l.duyet = null; }); h.checklist = {}; h.giaiTrinh = '';
     h.path.push('n3', 'n4'); U.f = {};
-    addLog('lap', h, 3, `${resend ? 'Gửi lại' : 'Gửi'} hồ sơ – phiên bản ${h.phienBan}`, h.versions[h.phienBan - 1].giaiTrinh ? 'Giải trình: ' + h.versions[h.phienBan - 1].giaiTrinh : '');
+    addLog('lap', h, 3, `${resend ? 'Gửi lại' : 'Gửi'} hồ sơ – phiên bản ${h.phienBan}`, sent.giaiTrinh ? 'Giải trình: ' + sent.giaiTrinh : '');
     toast(`Đã gửi phiên bản ${h.phienBan}. Trạng thái: Đã gửi/Chờ tiếp nhận.`);
   },
   /* Bước 4 */
