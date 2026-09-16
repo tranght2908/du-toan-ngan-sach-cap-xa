@@ -680,7 +680,9 @@ function applyGiao(S, vb, t, silent) {
 
 /* ---------- truy vấn ---------- */
 const nodeOf = h => last(h.path);
-const stOf = h => NODE[nodeOf(h)];
+/* Đã giao nhưng còn phương án phân bổ chưa giao hết → hiển thị 'Đã giao một phần' */
+const giaoThieu = h => S.phanBo.filter(p => p.hoSoId === h.id && p.chot && p.so - p.daGiao !== 0).length;
+const stOf = h => { const n = NODE[nodeOf(h)]; if (nodeOf(h) === 'n10' && giaoThieu(h)) return {...n, st: 'Đã giao một phần', c: 'warn', role: 'phanbo'}; return n; };
 const isApproved = h => !!h.duyetAt;
 const isEditable = h => ['n2', 'r1', 'r2', 'r3'].includes(nodeOf(h));
 const hsTot = (h, k) => sum(h.lines, l => l[k] || 0);
@@ -1182,11 +1184,11 @@ function actionPanel(h) {
       <div class="fld"><label for="f-note">Yêu cầu hoàn thiện (khi chưa thống nhất)</label>${area('f-note', 'f:note', F('note', DEF_QD_RET))}</div>
       <div class="row"><button class="btn okb" data-act="kyAsk" data-next="qdOk" data-vb="Nghị quyết/quyết định phê duyệt dự toán – ${esc(h.ma)}">Ký số &amp; thông qua</button><button class="btn danger" data-act="qdRet">Yêu cầu hoàn thiện</button></div>${summaryBox(h)}</div>`;
   }
-  if (nd === 'n8' || nd === 'n9') {
-    return head + `<div class="pb stack"><p style="margin:0">Dự toán đã được phê duyệt. Bộ phận phân bổ lập phương án phân bổ rồi giao dự toán cho đơn vị nhận.</p>
+  if (nd === 'n8' || nd === 'n9' || (nd === 'n10' && giaoThieu(h))) {
+    return head + `<div class="pb stack"><p style="margin:0">${nd === 'n10' ? 'Còn ' + giaoThieu(h) + ' đơn vị đã phân bổ nhưng chưa giao.' : 'Dự toán đã được phê duyệt.'}</p>
       <div class="row"><button class="btn pri" ${go('phanbo', {hs: h.id})}>Mở phân bổ</button><button class="btn" ${go('giao', {hs: h.id})}>Mở giao dự toán</button></div>${summaryBox(h)}</div>`;
   }
-  return head + `<div class="pb stack"><p style="margin:0">Dự toán đã giao. Theo dõi theo nguồn, loại kinh phí, đơn vị nhận, nhiệm vụ và các điều chỉnh/bổ sung.</p>
+  return head + `<div class="pb stack"><p style="margin:0">Dự toán đã giao đủ cho các đơn vị nhận.</p>
     <div class="row"><button class="btn pri" ${go('theodoi')}>Theo dõi sau giao</button><button class="btn" ${go('khoan')}>Khoản đã giao</button></div>${summaryBox(h)}</div>`;
 }
 
@@ -1375,7 +1377,7 @@ function vKy() {
   const nam = U.p.nam || 2027, k = kyOf(nam), E = U.role === 'admin' && k.st === 'Chưa mở';
   const kst = {'Chưa mở': '', 'Đang mở tiếp nhận': 'info', 'Đã đóng tiếp nhận': 'lock', 'Đã đóng kỳ lập dự toán': 'lock', 'Đang chấp hành': 'ok', 'Đã kết thúc năm ngân sách': 'lock'};
   const cb = (list, key) => `<div class="stack" style="gap:0">${DM[list].map(x => `<label class="chk small" for="kb-${key}-${x.ma}"><input type="checkbox" id="kb-${key}-${x.ma}" data-bind="kyl:${key}:${x.ma}" ${k[key].includes(x.ma) ? 'checked' : ''} ${E ? '' : 'disabled'}>${esc(x.ten)}</label>`).join('')}</div>`;
-  return pageHead('Quản trị', 'Kỳ lập dự toán', '')
+  return pageHead('Quản trị', 'Kỳ lập dự toán', '', U.role === 'admin' ? '<button class="btn pri" data-act="kyNew">Thêm kỳ năm tiếp theo</button>' : '')
   + `<section class="panel" style="margin-bottom:16px"><div class="tw"><table class="t"><thead><tr><th>Năm ngân sách</th><th>Trạng thái kỳ</th><th>Thời gian tiếp nhận</th><th>Phạm vi đơn vị được lập, gửi</th><th>Mở lúc</th></tr></thead><tbody>
   ${S.ky.map(x => `<tr class="click" ${go('ky', {nam: x.nam})} style="${x.nam === nam ? 'background:var(--brand-soft)' : ''}"><td><b>${x.nam}</b></td><td>${chip(x.st, kst[x.st])}</td><td>${dt(x.tu)} – ${dt(x.den)}</td><td>${esc(x.dvLap)}</td><td>${x.moAt ? dtt(x.moAt) : '—'}</td></tr>`).join('')}</tbody></table></div></section>
   <section class="panel"><header><h3>Cấu hình kỳ ${nam}</h3><div class="row">${chip(k.st, kst[k.st])}
@@ -1596,10 +1598,11 @@ const ACT = {
   logReload() { toast('Đã tải lại nhật ký'); },
   pg(d) { const g = pgOf(d.key), n = ({hoso: () => S.hoSo.filter(h => h.nam === U.nam).length, log: () => S.log.length, khoan: () => S.khoan.filter(k => k.nam === U.nam).length, dm: () => DM[U.p.dm || 'nhiemVu'].length})[d.key]?.() ?? 0; const last = Math.max(0, Math.ceil(n / g.size) - 1); g.p = d.op === 'first' ? 0 : d.op === 'prev' ? Math.max(0, g.p - 1) : d.op === 'next' ? Math.min(last, g.p + 1) : last; },
   kyOpen(d) { const k = kyOf(+d.nam); k.st = 'Đang mở tiếp nhận'; k.moAt = now(); addLog('admin', null, 1, 'Mở kỳ lập dự toán năm ' + k.nam, `Tiếp nhận từ ${dt(k.tu)} đến ${dt(k.den)}`); toast(`Đã mở kỳ lập dự toán năm ${k.nam}. Đơn vị lập dự toán có thể lập hồ sơ.`); },
+  kyNew() { if (!need(U.role === 'admin', 'Chỉ Quản trị hệ thống được tạo kỳ.')) return; const y = Math.max(...S.ky.map(k => k.nam)) + 1; S.ky.push(mkKy(y, 'Chưa mở', null)); S.vbSeq[y] = 1; addLog('admin', null, 1, 'Tạo kỳ lập dự toán năm ' + y, 'Chưa mở'); U.p.nam = y; toast('Đã tạo kỳ lập dự toán năm ' + y); },
   kyClose(d) {
     const k = kyOf(+d.nam), state = kyCloseState(k.nam);
     if (!need(state.canClose, `Chưa thể đóng kỳ ${k.nam}: còn ${state.blockers.length || '0'} hồ sơ dự toán chưa hoàn tất giao dự toán${state.blockers.length ? ' – ' + state.blockers.map(x => { const h = S.hoSo.find(y => y.id === x.id); return `${x.ma} (${stOf(h).ten})`; }).join(', ') : ' hoặc chưa có hồ sơ dự toán'}.`)) return;
-    k.st = 'Đã đóng kỳ lập dự toán'; addLog('admin', null, 1, 'Đóng kỳ lập dự toán năm ' + k.nam, 'Tất cả hồ sơ dự toán năm đã hoàn tất giao dự toán'); toast('Đã đóng kỳ lập dự toán năm ' + k.nam);
+    k.st = 'Đang chấp hành'; addLog('admin', null, 1, 'Đóng kỳ lập dự toán năm ' + k.nam, 'Tất cả hồ sơ dự toán năm đã hoàn tất giao dự toán; chuyển sang chấp hành dự toán'); toast('Đã đóng kỳ lập dự toán năm ' + k.nam);
   },
 
   /* Bước 2 – 3 */
