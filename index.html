@@ -292,7 +292,7 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
 <script src="business-rules.js"></script>
 <script>
 /* ================= DỮ LIỆU & TIỆN ÍCH (toàn bộ dữ liệu là giả định) ================= */
-const LS_KEY = 'dtns-proto-v5';
+const LS_KEY = 'dtns-proto-v6';
 const TR = 1e6;
 const fmt = n => Math.round(n || 0).toLocaleString('vi-VN');
 const fmtS = n => (n > 0 ? '+' : '') + fmt(n);
@@ -603,12 +603,14 @@ function seedDC(S, nam, o) {
 
 /* ---------- khởi tạo dữ liệu giả định ---------- */
 function seed() {
-  const S = {v: 4, ky: [mkKy(2025, 'Đã kết thúc năm ngân sách', '2024-09-12T08:00:00'), mkKy(2026, 'Đang chấp hành', '2025-09-12T08:00:00'), mkKy(2027, 'Chưa mở', null)],
+  const S = {v: 5, ky: [mkKy(2025, 'Đã kết thúc năm ngân sách', '2024-09-12T08:00:00'), mkKy(2026, 'Đang chấp hành', '2025-09-12T08:00:00'), mkKy(2027, 'Đang mở tiếp nhận', '2026-09-12T08:00:00')],
     hoSo: [], phanBo: [], vbGiao: [], khoan: [], log: [], vbSeq: {2025: 180, 2026: 210, 2027: 25}, capTren: {}};
   S.capTren[2025] = {...ctDefault(2025), so: '412/TB-UBND', t: '2024-08-25T09:00:00', nguoi: ROLES.lap.nguoi};
   S.capTren[2026] = {...ctDefault(2026), so: '436/TB-UBND', t: '2025-08-25T09:00:00', nguoi: ROLES.lap.nguoi};
+  S.capTren[2027] = {...ctDefault(2027), so: '451/TB-UBND', t: '2026-08-25T09:00:00', nguoi: ROLES.lap.nguoi};
   S.log.push({t: '2024-09-12T08:00:00', role: 'admin', hs: null, buoc: 1, act: 'Mở kỳ lập dự toán năm 2025', note: 'Tiếp nhận từ 15/09/2024 đến 31/10/2024'});
   S.log.push({t: '2025-09-12T08:00:00', role: 'admin', hs: null, buoc: 1, act: 'Mở kỳ lập dự toán năm 2026', note: 'Tiếp nhận từ 15/09/2025 đến 31/10/2025'});
+  S.log.push({t: '2026-09-12T08:00:00', role: 'admin', hs: null, buoc: 1, act: 'Mở kỳ lập dự toán năm 2027', note: 'Tiếp nhận từ 15/09/2026 đến 31/10/2026'});
 
   /* Năm 2025 – đã kết thúc */
   seedDT(S, 2025, 0.88, {tt: '35/TTr-BKTNS', qd: '19/NQ-HĐND'});
@@ -633,6 +635,14 @@ function seed() {
     tl: [['BM01', 'Tờ trình điều chỉnh dự toán đợt 3.pdf'], ['BM03', 'Thuyết minh nhu cầu tăng giáo viên.pdf'], ['BM04', 'Thông báo bổ sung phát sinh.pdf']],
     lines: [{nv: 'NV05', tr: 180, ly: 'Tăng 3 giáo viên hợp đồng từ năm học 2026–2027 theo quyết định giao số lượng người làm việc'},
       {bs: 1, nv: 'NV20', nguon: 'N5', tr: 150, ly: 'Kế hoạch phòng, chống dịch tay chân miệng quý III–IV'}]});
+
+  /* Năm 2027 – kỳ đang mở tiếp nhận, hồ sơ dự toán ở trạng thái nháp để thao tác từ đầu quy trình */
+  { const h = {id: 'hs2027', ma: 'HS-2027-001', nam: 2027, loai: 'DT', ten: 'Dự toán NSNN cấp xã/phường năm 2027', path: ['start', 'n1', 'n2'], phienBan: 1, lines: [], nguonDK: [],
+      canCuChung: '', taiLieu: [], giaiTrinh: '', ykienTT: '', toTrinh: null, quyetDinh: null, checklist: {}, versions: [], lastReturn: null, duyetAt: null};
+    h.lines = mkLinesDT(1); h.nguonDK = mkNguonDK(2027, h.lines);
+    h.canCuChung = 'Luật Ngân sách nhà nước số 89/2025/QH15; hướng dẫn xây dựng dự toán ngân sách năm 2027 của UBND tỉnh; định mức phân bổ chi thường xuyên theo Nghị quyết HĐND tỉnh.';
+    h.taiLieu = DM.bieuMau.slice(0, 4).map(b => ({id: uid('T'), bm: b.ma, ten: b.ten + ' năm 2027.pdf', ngay: '2026-09-15'}));
+    S.hoSo.push(h); S.log.push({t: '2026-09-15T09:00:00', role: 'lap', hs: h.id, buoc: 2, act: 'Tạo hồ sơ dự toán (nháp)', note: 'Điền ' + h.lines.length + ' nhiệm vụ chi từ số giao 451/TB-UBND'}); }
   return S;
 }
 
@@ -720,14 +730,14 @@ function canXuLy(S, nam) {
 /* ---------- lưu trữ ---------- */
 let S, U;
 function load() {
-  try { const raw = localStorage.getItem(LS_KEY); if (raw) { const o = JSON.parse(raw); if (o && o.S && o.S.v === 4) { S = o.S; U = o.U; } } } catch (e) {}
+  try { const raw = localStorage.getItem(LS_KEY); if (raw) { const o = JSON.parse(raw); if (o && o.S && o.S.v === 5) { S = o.S; U = o.U; } } } catch (e) {}
   if (!S) { S = seed(); U = null; }
   bindDm(false);
-  U = Object.assign({role: 'admin', view: 'home', p: {}, nam: 2026, demo: true, sc: 0, tab: 'ct', seen: [], f: {}}, U || {});
+  U = Object.assign({role: 'admin', view: 'home', p: {}, nam: 2027, demo: true, sc: 0, tab: 'ct', seen: [], f: {}}, U || {});
   U.modal = null; U.menu = false;
 }
 function save() { try { localStorage.setItem(LS_KEY, JSON.stringify({S, U})); } catch (e) {} }
-function resetAll() { S = seed(); bindDm(true); U = {role: 'admin', view: 'home', p: {}, nam: 2026, demo: U ? U.demo : true, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
+function resetAll() { S = seed(); bindDm(true); U = {role: 'admin', view: 'home', p: {}, nam: 2027, demo: U ? U.demo : true, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
 function addLog(role, h, buoc, act, note) { S.log.push({t: new Date().toISOString(), role, hs: h ? h.id : null, buoc, act, note: note || ''}); }
 
 /* ================= GIAO DIỆN: KHUNG, TỔNG QUAN, HỒ SƠ ================= */
