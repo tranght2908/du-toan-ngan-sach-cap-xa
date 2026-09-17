@@ -6,7 +6,7 @@
   const clone = value => JSON.parse(JSON.stringify(value));
 
   const identity = {
-    name: 'Phần mềm lập và quản lý dự toán NSNN',
+    name: 'Phần mềm lập và tổng hợp Dự toán ngân sách nhà nước',
     agency: 'Sở Tài chính Vĩnh Long',
     logoAsset: 'assets/quoc_huy.png',
     palette: {

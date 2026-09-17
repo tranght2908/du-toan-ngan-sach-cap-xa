@@ -1,8 +1,8 @@
-# Phần mềm lập và quản lý dự toán NSNN
+# Phần mềm lập và tổng hợp Dự toán ngân sách nhà nước
 
 👉 **Truy cập: https://tranght2908.github.io/du-toan-ngan-sach-cap-xa/**
 
-Tệp chạy độc lập: **`Phan-mem-lap-va-quan-ly-du-toan-NSNN.html`** — mở bằng trình duyệt là dùng được, không cần cài đặt.
+Tệp chạy độc lập: **`Phan-mem-lap-va-tong-hop-Du-toan-NSNN.html`** — mở bằng trình duyệt là dùng được, không cần cài đặt.
 
 ## Phạm vi
 

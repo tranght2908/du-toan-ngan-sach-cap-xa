@@ -61,7 +61,7 @@ test('mỗi vai trò có tài khoản và mật khẩu khởi tạo thống nh�
 test('nhận diện hệ thống dùng tên NSNN và bộ màu STC Vĩnh Long', () => {
   const identity = systemIdentity();
 
-  assert.equal(identity.name, 'Phần mềm lập và quản lý dự toán NSNN');
+  assert.equal(identity.name, 'Phần mềm lập và tổng hợp Dự toán ngân sách nhà nước');
   assert.equal(identity.agency, 'Sở Tài chính Vĩnh Long');
   assert.equal(identity.logoAsset, 'assets/quoc_huy.png');
   assert.deepEqual(identity.palette, {
