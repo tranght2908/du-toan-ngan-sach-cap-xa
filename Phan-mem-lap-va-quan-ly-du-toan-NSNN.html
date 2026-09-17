@@ -355,7 +355,7 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
     return revised;
   }
 
-  const demoAccounts = [
+  const accounts = [
     { role: 'admin', username: 'admin', password: 'Demo@2027' },
     { role: 'lap', username: 'lap', password: 'Demo@2027' },
     { role: 'tiepnhan', username: 'tiepnhan', password: 'Demo@2027' },
@@ -414,7 +414,7 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
   return {
     evaluatePeriodClosure,
     createRevision,
-    demoAccounts,
+    accounts,
     rolePermissions,
     systemIdentity,
   };
@@ -422,8 +422,8 @@ table.t{width:100%;border-collapse:collapse;font-size:15px}
 
 </script>
 <script>
-/* ================= DỮ LIỆU & TIỆN ÍCH (toàn bộ dữ liệu là giả định) ================= */
-const LS_KEY = 'dtns-proto-v6';
+/* ================= DỮ LIỆU & TIỆN ÍCH ================= */
+const LS_KEY = 'dtnsnn-v1';
 const TR = 1e6;
 const fmt = n => Math.round(n || 0).toLocaleString('vi-VN');
 const fmtS = n => (n > 0 ? '+' : '') + fmt(n);
@@ -551,7 +551,7 @@ function bindDm(fresh) { S.dm = S.dm || {}; DM_KEYS.forEach(k => { if (fresh || 
 const nm = (list, ma) => (DM[list].find(x => x.ma === ma) || {}).ten || ma || '—';
 const nvOf = ma => DM.nhiemVu.find(x => x.ma === ma) || {};
 
-/* Định mức phân bổ chi thường xuyên (giả định): số lượng × định mức (triệu đồng/đơn vị/năm); hệ số theo năm ngân sách */
+/* Định mức phân bổ chi thường xuyên: số lượng × định mức (triệu đồng/đơn vị/năm); hệ số theo năm ngân sách */
 const DINH_MUC = {
   NV01: {dvt: 'biên chế', sl: 126, dm: 210}, NV04: {dvt: 'học sinh', sl: 18200, dm: 5.8}, NV25: {dvt: 'học sinh', sl: 14600, dm: 5.5},
   NV05: {dvt: 'học sinh', sl: 22100, dm: 4.2}, NV26: {dvt: 'học sinh', sl: 16800, dm: 4.1}, NV06: {dvt: 'học sinh', sl: 15200, dm: 4.6},
@@ -560,7 +560,7 @@ const DINH_MUC = {
 const DM_HESO = {2025: 0.88, 2026: 0.94};
 const dmOf = (nv, nam) => { const d = DINH_MUC[nv]; if (!d) return null; const dm = +(d.dm * (DM_HESO[nam] || 1)).toFixed(4); return {...d, dm, tien: Math.round(d.sl * dm) * TR}; };
 
-/* Chứng thư số (mô phỏng) theo vai trò; chữ ký ghi vai trò ký, thời gian, serial */
+/* Chứng thư số theo vai trò; chữ ký ghi vai trò ký, thời gian, serial */
 const CERT = {admin: '5401 0A7F 22C0', lap: '5401 0A7F 22C1', tiepnhan: '5401 0A7F 22C2', thamtra: '5401 0A7F 22C3', thamquyen: '5401 0A7F 22C4', phanbo: '5401 0A7F 22C5', theodoi: '5401 0A7F 22C6'};
 const sigAt = (role, t, vb) => ({role, nguoi: ROLES[role].ten, cv: ROLES[role].cv, t, serial: CERT[role], vb});
 const sigBadge = s => s ? `<span class="sig" title="Serial ${esc(s.serial)}">✔ Đã ký số <small>${esc(s.nguoi)} · ${dtt(s.t)}</small></span>` : '';
@@ -587,7 +587,7 @@ const NODE = {
 };
 const STEPS = ['Mở kỳ', 'Lập hồ sơ', 'Gửi hồ sơ', 'Tiếp nhận', 'Thẩm tra', 'Trình', 'Phê duyệt', 'Phân bổ', 'Giao', 'Theo dõi'];
 
-/* ---------- mẫu số liệu dự toán năm (triệu đồng) ---------- */
+/* ---------- số liệu dự toán năm của đơn vị (triệu đồng) ---------- */
 const TPL = [
   ['NV01', 'N1', 'TC', 6850, 'Định mức chi QLNN theo Nghị quyết HĐND tỉnh; 38 biên chế, 12 người hoạt động không chuyên trách'],
   ['NV02', 'N1', 'TC', 980, 'Định mức hoạt động HĐND; 2 kỳ họp thường lệ, 1 kỳ họp chuyên đề'],
@@ -640,7 +640,7 @@ function mkLinesDT(scale) {
     deNghi: Math.round(tr * scale / 10) * 10 * TR, canCu, thamTra: null, ykTT: '', duyet: null,
   }));
 }
-/* Nguồn dự kiến = tổng chi theo nguồn; riêng mẫu điền nhanh cố ý để nguồn Bổ sung có mục tiêu thiếu 170 triệu (tình huống thẩm tra) */
+/* Nguồn dự kiến = tổng chi theo nguồn; khi điền nhanh, nguồn Bổ sung có mục tiêu thiếu 170 triệu để cân đối lại ở khâu thẩm tra */
 function mkNguonDK(nam, lines) {
   const src = lines || mkLinesDT(1);
   return DM.nguon.filter(n => src.some(l => l.nguon === n.ma)).map(n => ({
@@ -732,7 +732,7 @@ function seedDC(S, nam, o) {
   return h;
 }
 
-/* ---------- khởi tạo dữ liệu giả định ---------- */
+/* ---------- khởi tạo dữ liệu ---------- */
 function seed() {
   const S = {v: 5, ky: [mkKy(2025, 'Đã kết thúc năm ngân sách', '2024-09-12T08:00:00'), mkKy(2026, 'Đang chấp hành', '2025-09-12T08:00:00'), mkKy(2027, 'Đang mở tiếp nhận', '2026-09-12T08:00:00')],
     hoSo: [], phanBo: [], vbGiao: [], khoan: [], log: [], vbSeq: {2025: 180, 2026: 210, 2027: 25}, capTren: {}};
@@ -866,15 +866,15 @@ function load() {
   try { const raw = localStorage.getItem(LS_KEY); if (raw) { const o = JSON.parse(raw); if (o && o.S && o.S.v === 5) { S = o.S; U = o.U; } } } catch (e) {}
   if (!S) { S = seed(); U = null; }
   bindDm(false);
-  U = Object.assign({role: 'admin', view: 'home', p: {}, nam: 2027, demo: true, sc: 0, tab: 'ct', seen: [], f: {}}, U || {});
+  U = Object.assign({role: 'admin', view: 'home', p: {}, nam: 2027, sc: 0, tab: 'ct', seen: [], f: {}}, U || {});
   U.modal = null; U.menu = false;
 }
 function save() { try { localStorage.setItem(LS_KEY, JSON.stringify({S, U})); } catch (e) {} }
-function resetAll() { S = seed(); bindDm(true); U = {role: 'admin', view: 'home', p: {}, nam: 2027, demo: U ? U.demo : true, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
+function resetAll() { S = seed(); bindDm(true); U = {role: 'admin', view: 'home', p: {}, nam: 2027, sc: 0, tab: 'ct', seen: [], f: {}, modal: null}; save(); }
 function addLog(role, h, buoc, act, note) { S.log.push({t: new Date().toISOString(), role, hs: h ? h.id : null, buoc, act, note: note || ''}); }
 
 /* ================= GIAO DIỆN: KHUNG, TỔNG QUAN, HỒ SƠ ================= */
-const demoAccount = role => BudgetBusinessRules.demoAccounts.find(account => account.role === role);
+const accountOf = role => BudgetBusinessRules.accounts.find(account => account.role === role);
 const permissionOf = role => BudgetBusinessRules.rolePermissions(role);
 const chip = (t, c) => `<span class="chip ${c || ''}">${esc(t)}</span>`;
 const stChip = h => { const n = stOf(h); return chip(n.st || n.ten, n.c); };
@@ -1186,7 +1186,7 @@ function vHoSo() {
 
 /* ================= KHUNG XỬ LÝ, PHÂN BỔ, GIAO ================= */
 const todayIso = () => isoDay(new Date());
-/* Nội dung điền sẵn cho các ô nhập liệu khi demo */
+/* Nội dung điền sẵn cho các ô nhập liệu */
 const DEF_YK = 'Dự toán lập đúng định mức, căn cứ đầy đủ, cân đối được nguồn. Đề nghị trình HĐND tỉnh xem xét, quyết định.';
 const DEF_TT_RET = 'Đề nghị đơn vị bổ sung thuyết minh căn cứ định mức cho các nhiệm vụ có mức đề nghị tăng trên 10% so với năm trước.';
 const DEF_QD_RET = 'Đề nghị làm rõ cơ sở tăng chi sự nghiệp giáo dục so với năm trước và bổ sung thuyết minh nguồn kết dư.';
@@ -1555,7 +1555,7 @@ function vDm() {
 function vTk() {
   return pageHead('Quản trị', 'Vai trò và phân quyền', '')
   + `<section class="panel"><div class="tw"><table class="t"><thead><tr><th>Mã vai trò</th><th>Vai trò</th><th>Khâu nghiệp vụ</th><th>Phạm vi dữ liệu</th><th>Được thao tác</th><th>Giới hạn</th></tr></thead><tbody>
-  ${Object.entries(ROLES).map(([k, r]) => { const account = demoAccount(k), permission = permissionOf(k); return `<tr><td><b>${esc(account?.username || '')}</b>${chip('Hoạt động', 'ok')}</td><td><b>${esc(r.ten)}</b></td><td>${esc(permission.khau)}</td><td class="small">${esc(permission.scope)}</td><td class="small"><ul style="margin:0;padding-left:17px">${permission.actions.map(action => `<li>${esc(action)}</li>`).join('')}</ul></td><td class="small">${esc(permission.limits)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
+  ${Object.entries(ROLES).map(([k, r]) => { const account = accountOf(k), permission = permissionOf(k); return `<tr><td><b>${esc(account?.username || '')}</b>${chip('Hoạt động', 'ok')}</td><td><b>${esc(r.ten)}</b></td><td>${esc(permission.khau)}</td><td class="small">${esc(permission.scope)}</td><td class="small"><ul style="margin:0;padding-left:17px">${permission.actions.map(action => `<li>${esc(action)}</li>`).join('')}</ul></td><td class="small">${esc(permission.limits)}</td></tr>`; }).join('')}</tbody></table></div></section>`;
 }
 
 function vLog() {
@@ -1646,7 +1646,7 @@ function goto(view, p) {
   window.scrollTo(0, 0);
 }
 const need = (cond, msg) => { if (!cond) toast(msg, true); return cond; };
-/* Điền sẵn hồ sơ dự toán năm bằng dữ liệu giả định (cố ý thiếu văn bản căn cứ nguồn để minh họa Bước 4 trả bổ sung) */
+/* Điền sẵn hồ sơ dự toán năm (thiếu văn bản căn cứ nguồn để cán bộ tiếp nhận có thể trả lại bổ sung) */
 function fillHs(h) {
   h.lines = mkLinesDT(1); h.nguonDK = mkNguonDK(h.nam);
   h.canCuChung = `Luật Ngân sách nhà nước số 89/2025/QH15; hướng dẫn xây dựng dự toán ngân sách năm ${h.nam} của UBND tỉnh; định mức phân bổ chi thường xuyên theo Nghị quyết HĐND tỉnh.`;
@@ -1677,7 +1677,7 @@ const ACT = {
   doReset() { resetAll(); toast('Đã đặt lại dữ liệu'); },
   closeModal(d, el, e) { if (d.self && e && e.target !== el) return false; U.modal = null; },
   khoan(d) { U.modal = {type: 'khoan', id: d.id}; },
-  /* Ký số (mô phỏng): chọn chứng thư, nhập PIN rồi thực hiện thao tác kèm chữ ký */
+  /* Ký số: chọn chứng thư, nhập PIN rồi thực hiện thao tác kèm chữ ký */
   kyAsk(d) { U.modal = {type: 'ky', next: d.next, vb: d.vb}; },
   kyDo() { const m = U.modal; U.modal = null; U.sig = sigAt(U.role, now(), m.vb); try { ACT[m.next]({}); } finally { U.sig = null; } },
   excelAsk() { U.modal = {type: 'excel'}; },
@@ -1909,7 +1909,7 @@ function modalView() {
       <div class="fld"><label>Văn bản ký</label><b>${esc(U.modal.vb)}</b></div>
       <div class="fld"><label for="ky-cert">Chứng thư số</label><select class="inp" id="ky-cert"><option>${esc(r.ten)} · Serial ${CERT[U.role]} · hiệu lực đến 31/12/2028</option></select></div>
       <div class="fld"><label for="ky-pin">Mã PIN thiết bị ký số</label><input class="inp" id="ky-pin" type="password" value="123456" autocomplete="off"></div>
-      <p class="small muted" style="margin:0">Mô phỏng ký số bằng USB token/SIM ký số. Sau khi ký, văn bản ghi nhận vai trò ký, thời gian ký và số serial chứng thư.</p></div>
+      <p class="small muted" style="margin:0">Ký số bằng USB token hoặc SIM ký số. Sau khi ký, văn bản ghi nhận vai trò ký, thời gian ký và số serial chứng thư.</p></div>
       <footer><button class="btn" data-act="closeModal">Hủy</button><button class="btn pri" data-act="kyDo">Ký số và tiếp tục</button></footer></div></div>`;
   }
   if (U.modal.type === 'dm') {

@@ -60,7 +60,7 @@
     return revised;
   }
 
-  const demoAccounts = [
+  const accounts = [
     { role: 'admin', username: 'admin', password: 'Demo@2027' },
     { role: 'lap', username: 'lap', password: 'Demo@2027' },
     { role: 'tiepnhan', username: 'tiepnhan', password: 'Demo@2027' },
@@ -119,7 +119,7 @@
   return {
     evaluatePeriodClosure,
     createRevision,
-    demoAccounts,
+    accounts,
     rolePermissions,
     systemIdentity,
   };

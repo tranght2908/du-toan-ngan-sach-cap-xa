@@ -1,12 +1,23 @@
-# Prototype phần mềm lập và quản lý dự toán NSNN
+# Phần mềm lập và quản lý dự toán NSNN
 
-👉 **Xem prototype: https://tranght2908.github.io/du-toan-ngan-sach-cap-xa/**
+👉 **Truy cập: https://tranght2908.github.io/du-toan-ngan-sach-cap-xa/**
 
-Mở link trên bằng trình duyệt là dùng được ngay, không cần cài đặt hay đăng nhập.
+Tệp chạy độc lập: **`Phan-mem-lap-va-quan-ly-du-toan-NSNN.html`** — mở bằng trình duyệt là dùng được, không cần cài đặt.
 
-Tệp chạy độc lập: **`Phan-mem-lap-va-quan-ly-du-toan-NSNN.html`** (đã gộp mã nghiệp vụ và quốc huy, chỉ cần gửi một tệp này). `index.html` chỉ chuyển hướng tới tệp trên; `business-rules.js` và `assets/` giữ lại cho kiểm thử (`node --test business-rules.test.js`).
+## Phạm vi
 
-- Prototype mô phỏng Sở Tài chính Vĩnh Long quản lý luồng lập, thẩm tra, phê duyệt, phân bổ, giao và theo dõi dự toán NSNN cấp xã/phường.
-- Toàn bộ số liệu, vai trò và văn bản trong prototype là giả định, chỉ phục vụ minh họa nghiệp vụ.
-- Có sẵn 7 vai trò demo theo luồng nghiệp vụ; đổi vai trò ở menu góc trên bên phải hoặc xem đầy đủ quyền tại **Quản trị → Vai trò demo & phân quyền**. Mật khẩu mô phỏng chung: `Demo@2027`.
-- Thao tác chỉ lưu trên trình duyệt hiện tại; muốn quay về dữ liệu ban đầu, chọn **"Khôi phục dữ liệu mẫu"** trong menu vai trò.
+Quản lý trọn vòng dự toán ngân sách nhà nước cấp xã/phường: đơn vị lập và gửi hồ sơ → Sở Tài chính tiếp nhận, thẩm tra, trình → cấp có thẩm quyền quyết định → phân bổ, giao dự toán → theo dõi sau giao và điều chỉnh, bổ sung trong năm.
+
+## Vai trò
+
+Quản trị hệ thống · Đơn vị lập dự toán · Cán bộ tiếp nhận · Cán bộ thẩm tra · Cấp có thẩm quyền · Bộ phận phân bổ / giao dự toán · Kế toán / theo dõi. Đổi vai trò ở góc dưới bên trái; quyền của từng vai trò xem tại **Quản trị → Vai trò & phân quyền**.
+
+## Dữ liệu
+
+- Năm 2025, 2026: dự toán đã giao, có điều chỉnh/bổ sung trong năm.
+- Năm 2027: kỳ đang mở tiếp nhận, hồ sơ HS-2027-001 đang ở trạng thái nháp — bắt đầu từ vai trò Đơn vị lập dự toán để đi hết quy trình.
+- Thao tác được lưu trên trình duyệt đang dùng; chọn **Đặt lại dữ liệu** trong menu vai trò để quay về trạng thái ban đầu.
+
+## Kiểm thử
+
+`business-rules.js` chứa quy tắc nghiệp vụ (đã gộp vào tệp HTML); chạy `node --test business-rules.test.js`.

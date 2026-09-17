@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { evaluatePeriodClosure, createRevision, demoAccounts, rolePermissions, systemIdentity } = require('./business-rules.js');
+const { evaluatePeriodClosure, createRevision, accounts, rolePermissions, systemIdentity } = require('./business-rules.js');
 
 test('chỉ cho đóng kỳ khi mọi hồ sơ dự toán năm đã hoàn tất giao dự toán', () => {
   const result = evaluatePeriodClosure([
@@ -51,11 +51,11 @@ test('trả lại khóa v1 và tạo ngay v2 có dữ liệu kế thừa để c
   assert.notStrictEqual(result.versions[1].lines, result.versions[0].lines);
 });
 
-test('mỗi vai trò có mã demo và mật khẩu mô phỏng thống nhất', () => {
-  assert.equal(demoAccounts.length, 7);
-  assert.deepEqual(demoAccounts.map(account => account.role), ['admin', 'lap', 'tiepnhan', 'thamtra', 'thamquyen', 'phanbo', 'theodoi']);
-  assert.deepEqual(demoAccounts.map(account => account.username), ['admin', 'lap', 'tiepnhan', 'thamtra', 'thamquyen', 'phanbo', 'theodoi']);
-  assert.ok(demoAccounts.every(account => account.password === 'Demo@2027'));
+test('mỗi vai trò có tài khoản và mật khẩu khởi tạo thống nhất', () => {
+  assert.equal(accounts.length, 7);
+  assert.deepEqual(accounts.map(account => account.role), ['admin', 'lap', 'tiepnhan', 'thamtra', 'thamquyen', 'phanbo', 'theodoi']);
+  assert.deepEqual(accounts.map(account => account.username), ['admin', 'lap', 'tiepnhan', 'thamtra', 'thamquyen', 'phanbo', 'theodoi']);
+  assert.ok(accounts.every(account => account.password === 'Demo@2027'));
 });
 
 test('nhận diện hệ thống dùng tên NSNN và bộ màu STC Vĩnh Long', () => {
